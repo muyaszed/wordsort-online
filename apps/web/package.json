@@ -1,0 +1,32 @@
+{
+  "name": "@wordsort/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --turbopack",
+    "lint": "next lint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@wordsort/db": "workspace:*",
+    "@wordsort/game-logic": "workspace:*",
+    "@wordsort/ui": "workspace:*",
+    "next": "^15.0.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@wordsort/eslint-config": "workspace:*",
+    "@wordsort/tailwind-config": "workspace:*",
+    "@wordsort/typescript-config": "workspace:*",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.7.2"
+  }
+}
