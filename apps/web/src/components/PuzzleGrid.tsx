@@ -1,118 +1,66 @@
 "use client";
 
-import type { Grid } from "@wordsort/game-logic";
 import { useCallback, useRef, useState } from "react";
+import { canSlide, findEmpty, type PuzzleGrid, type PuzzleState } from "@/lib/puzzle-engine";
 
 interface PuzzleGridProps {
-  grid: Grid;
-  targetWords: string[];
-  onSlideColUp: (colIndex: number) => void;
-  onSlideColDown: (colIndex: number) => void;
+  state: PuzzleState;
+  onSlideTile: (index: number) => void;
 }
 
-const TILE_W = 56; // w-14
+const CELL = 64; // px per cell (tile 56 + gap 8)
+const TILE = 56; // tile size
 
-function rowSolvedClass(solved: boolean) {
-  return solved
-    ? "bg-emerald-50 border-emerald-200 rounded-xl px-1"
-    : "px-1";
-}
+export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
+  const { grid, targetWords } = state;
+  const [animating, setAnimating] = useState<{ index: number; dx: number; dy: number } | null>(null);
+  const lockRef = useRef(false);
 
-export function PuzzleGrid({
-  grid,
-  targetWords,
-  onSlideColUp,
-  onSlideColDown,
-}: PuzzleGridProps) {
-  // selected: { row, col } — the tile the player tapped first
-  const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
-  // animating column → direction
-  const [colAnim, setColAnim] = useState<Record<number, "up" | "down">>({});
-  const animLock = useRef<Record<number, boolean>>({});
-
-  const maxCols = Math.max(...grid.map((r) => r.length));
+  const emptyIndex = findEmpty(grid);
+  const emptyRow = Math.floor(emptyIndex / 5);
+  const emptyCol = emptyIndex % 5;
 
   const isRowSolved = useCallback(
     (rowIndex: number) => {
-      const row = grid[rowIndex];
       const target = targetWords[rowIndex];
-      if (!row || !target) return false;
-      return row.map((t) => t.letter).join("") === target;
+      if (!target) return false;
+      const start = rowIndex * 5;
+      const cells = grid.slice(start, start + 5);
+      if (target.length === 5) {
+        return cells.every((c) => c !== null) && cells.join("") === target;
+      }
+      return cells[4] === null && cells.slice(0, 4).join("") === target;
     },
     [grid, targetWords]
   );
 
-  const triggerCol = useCallback(
-    (colIndex: number, dir: "up" | "down") => {
-      if (animLock.current[colIndex]) return;
-      animLock.current[colIndex] = true;
-      setColAnim((prev) => ({ ...prev, [colIndex]: dir }));
+  const handleClick = useCallback(
+    (index: number) => {
+      if (lockRef.current) return;
+      if (!canSlide(grid, index)) return;
+      lockRef.current = true;
+
+      const tileRow = Math.floor(index / 5);
+      const tileCol = index % 5;
+      const dx = (emptyCol - tileCol) * CELL;
+      const dy = (emptyRow - tileRow) * CELL;
+
+      setAnimating({ index, dx, dy });
       setTimeout(() => {
-        dir === "up" ? onSlideColUp(colIndex) : onSlideColDown(colIndex);
-        setColAnim((prev) => {
-          const next = { ...prev };
-          delete next[colIndex];
-          return next;
-        });
-        animLock.current[colIndex] = false;
+        onSlideTile(index);
+        setAnimating(null);
+        lockRef.current = false;
       }, 180);
     },
-    [onSlideColUp, onSlideColDown]
+    [grid, emptyRow, emptyCol, onSlideTile]
   );
 
-  const handleTileClick = useCallback(
-    (rowIndex: number, colIndex: number) => {
-      if (isRowSolved(rowIndex)) return;
+  // Touch swipe
+  const touchStart = useRef<{ x: number; y: number; index: number } | null>(null);
 
-      if (!selected) {
-        setSelected({ row: rowIndex, col: colIndex });
-        return;
-      }
-
-      // Deselect if same tile clicked again
-      if (selected.row === rowIndex && selected.col === colIndex) {
-        setSelected(null);
-        return;
-      }
-
-      // If same column: cycle toward the tapped row
-      if (selected.col === colIndex) {
-        const colRows = grid
-          .map((r, i) => (colIndex < r.length ? i : -1))
-          .filter((i) => i >= 0);
-        const fromPos = colRows.indexOf(selected.row);
-        const toPos = colRows.indexOf(rowIndex);
-        if (fromPos !== -1 && toPos !== -1) {
-          const n = colRows.length;
-          const stepsUp = ((fromPos - toPos) + n) % n;
-          const stepsDown = ((toPos - fromPos) + n) % n;
-          const dir = stepsUp <= stepsDown ? "up" : "down";
-          const steps = Math.min(stepsUp, stepsDown);
-          let i = 0;
-          const fire = () => {
-            if (i >= steps) return;
-            triggerCol(colIndex, dir);
-            i++;
-            setTimeout(fire, 220);
-          };
-          fire();
-        }
-        setSelected(null);
-        return;
-      }
-
-      // Different column: just change selection
-      setSelected({ row: rowIndex, col: colIndex });
-    },
-    [selected, grid, triggerCol, isRowSolved]
-  );
-
-  // Touch swipe tracking per tile
-  const touchStart = useRef<{ x: number; y: number; col: number } | null>(null);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent, colIndex: number) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent, index: number) => {
     const t = e.touches[0];
-    if (t) touchStart.current = { x: t.clientX, y: t.clientY, col: colIndex };
+    if (t) touchStart.current = { x: t.clientX, y: t.clientY, index };
   }, []);
 
   const handleTouchEnd = useCallback(
@@ -121,110 +69,92 @@ export function PuzzleGrid({
       if (!t || !touchStart.current) return;
       const dy = t.clientY - touchStart.current.y;
       const dx = t.clientX - touchStart.current.x;
-      const col = touchStart.current.col;
+      const { index } = touchStart.current;
       touchStart.current = null;
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 20) {
-        triggerCol(col, dy < 0 ? "up" : "down");
-        setSelected(null);
+
+      if (Math.abs(dy) < 20 && Math.abs(dx) < 20) return;
+
+      const tileRow = Math.floor(index / 5);
+      const tileCol = index % 5;
+      const emptyIdx = findEmpty(grid);
+      const eRow = Math.floor(emptyIdx / 5);
+      const eCol = emptyIdx % 5;
+
+      // Allow swipe only if the swipe direction matches the tile's position relative to empty
+      const isAbove = tileRow < eRow && tileCol === eCol && dy > 0;
+      const isBelow = tileRow > eRow && tileCol === eCol && dy < 0;
+      const isLeft = tileCol < eCol && tileRow === eRow && dx > 0;
+      const isRight = tileCol > eCol && tileRow === eRow && dx < 0;
+
+      if (isAbove || isBelow || isLeft || isRight) {
+        handleClick(index);
       }
     },
-    [triggerCol]
+    [grid, handleClick]
   );
 
-  const allSolved = targetWords.every((_, i) => isRowSolved(i));
-
   return (
-    <div className="flex flex-col items-center gap-0 select-none">
-      {/* Column up buttons */}
-      <div className="flex gap-2 mb-1" style={{ paddingLeft: 0 }}>
-        {Array.from({ length: maxCols }).map((_, ci) => (
-          <button
-            key={ci}
-            onClick={() => triggerCol(ci, "up")}
-            disabled={allSolved}
-            aria-label={`Slide column ${ci + 1} up`}
-            className="flex items-center justify-center rounded-lg text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-            style={{ width: TILE_W, height: 28 }}
-          >
-            ▲
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-col items-center gap-5 select-none">
+      {/* 5×5 grid */}
+      <div
+        className="relative"
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(5, ${TILE}px)`,
+          gap: 8,
+        }}
+      >
+        {grid.map((cell, index) => {
+          const row = Math.floor(index / 5);
+          const slideable = canSlide(grid, index);
+          const rowSolved = isRowSolved(row);
+          const isAnim = animating?.index === index;
 
-      {/* Grid rows */}
-      <div className="flex flex-col gap-2">
-        {grid.map((row, rowIndex) => {
-          const solved = isRowSolved(rowIndex);
+          if (cell === null) {
+            return (
+              <div
+                key={index}
+                style={{ width: TILE, height: TILE }}
+                className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50"
+              />
+            );
+          }
+
           return (
             <div
-              key={rowIndex}
-              className={`flex gap-2 transition-colors duration-300 ${rowSolvedClass(solved)}`}
+              key={index}
+              onClick={() => handleClick(index)}
+              onTouchStart={(e) => handleTouchStart(e, index)}
+              onTouchEnd={handleTouchEnd}
+              style={{
+                width: TILE,
+                height: TILE,
+                transform: isAnim ? `translate(${animating.dx}px, ${animating.dy}px)` : undefined,
+                transition: isAnim ? "transform 170ms ease-in-out" : undefined,
+                zIndex: isAnim ? 10 : undefined,
+              }}
+              className={[
+                "flex items-center justify-center rounded-xl text-xl font-bold",
+                "border-2 shadow-sm",
+                slideable && !state.solved
+                  ? "cursor-pointer hover:border-indigo-400 hover:shadow-md active:scale-95"
+                  : "cursor-default",
+                rowSolved
+                  ? "bg-emerald-100 border-emerald-400 text-emerald-800"
+                  : "bg-white border-slate-200 text-slate-800",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
-              {row.map((tile, colIndex) => {
-                const isSelected =
-                  selected?.row === rowIndex && selected?.col === colIndex;
-                const colMoving = colAnim[colIndex];
-
-                return (
-                  <div
-                    key={tile.id}
-                    onClick={() => handleTileClick(rowIndex, colIndex)}
-                    onTouchStart={(e) => handleTouchStart(e, colIndex)}
-                    onTouchEnd={handleTouchEnd}
-                    className={[
-                      "flex items-center justify-center rounded-xl text-xl font-bold cursor-pointer",
-                      "border-2 shadow-sm transition-all duration-150 active:scale-95",
-                      isSelected
-                        ? "bg-indigo-100 border-indigo-500 text-indigo-900 scale-105 shadow-md z-10"
-                        : solved
-                        ? "bg-emerald-100 border-emerald-400 text-emerald-800"
-                        : "bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:shadow",
-                      colMoving === "up"
-                        ? "animate-slide-up"
-                        : colMoving === "down"
-                        ? "animate-slide-down"
-                        : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    style={{ width: TILE_W, height: TILE_W }}
-                  >
-                    {tile.letter}
-                  </div>
-                );
-              })}
-              {/* Pad shorter rows so column buttons stay aligned */}
-              {row.length < maxCols &&
-                Array.from({ length: maxCols - row.length }).map((_, i) => (
-                  <div
-                    key={`pad-${i}`}
-                    style={{ width: TILE_W, height: TILE_W }}
-                  />
-                ))}
+              {cell}
             </div>
           );
         })}
       </div>
 
-      {/* Column down buttons */}
-      <div className="flex gap-2 mt-1">
-        {Array.from({ length: maxCols }).map((_, ci) => (
-          <button
-            key={ci}
-            onClick={() => triggerCol(ci, "down")}
-            disabled={allSolved}
-            aria-label={`Slide column ${ci + 1} down`}
-            className="flex items-center justify-center rounded-lg text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-            style={{ width: TILE_W, height: 28 }}
-          >
-            ▼
-          </button>
-        ))}
-      </div>
-
-      {/* Target words hint */}
-      <div className="mt-4 flex flex-col items-start gap-1.5 w-full" style={{ maxWidth: maxCols * TILE_W + (maxCols - 1) * 8 }}>
-        <p className="text-xs text-slate-400 uppercase tracking-wider font-medium mb-0.5">
+      {/* Target words */}
+      <div className="flex flex-col items-start gap-1.5 w-full" style={{ maxWidth: 5 * TILE + 4 * 8 }}>
+        <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">
           Target words
         </p>
         <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -252,11 +182,9 @@ export function PuzzleGrid({
         </div>
       </div>
 
-      {/* Help text */}
-      {!allSolved && (
-        <p className="mt-3 text-xs text-slate-400 text-center max-w-xs">
-          Tap a tile to select it, then tap another in the same column to move it there.
-          Or swipe up/down on any column.
+      {!state.solved && (
+        <p className="text-xs text-slate-400 text-center max-w-xs">
+          Slide tiles into the empty space to spell the target words.
         </p>
       )}
     </div>

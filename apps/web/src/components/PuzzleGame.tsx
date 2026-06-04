@@ -11,13 +11,7 @@ interface PuzzleGameProps {
 }
 
 export function PuzzleGame({ puzzle }: PuzzleGameProps) {
-  const {
-    state,
-    elapsedMs,
-    slideColUp,
-    slideColDown,
-    reset,
-  } = usePuzzle(puzzle.words);
+  const { state, elapsedMs, slideTileAt, reset } = usePuzzle(puzzle.words);
 
   return (
     <div className="flex flex-col items-center gap-5 w-full">
@@ -28,12 +22,7 @@ export function PuzzleGame({ puzzle }: PuzzleGameProps) {
         title={puzzle.title}
       />
 
-      <PuzzleGrid
-        grid={state.grid}
-        targetWords={state.targetWords}
-        onSlideColUp={slideColUp}
-        onSlideColDown={slideColDown}
-      />
+      <PuzzleGrid state={state} onSlideTile={slideTileAt} />
 
       {state.solved && (
         <SolveScreen
