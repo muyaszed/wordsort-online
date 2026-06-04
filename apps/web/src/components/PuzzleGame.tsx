@@ -14,8 +14,6 @@ export function PuzzleGame({ puzzle }: PuzzleGameProps) {
   const {
     state,
     elapsedMs,
-    slideRowLeft,
-    slideRowRight,
     slideColUp,
     slideColDown,
     reset,
@@ -33,8 +31,6 @@ export function PuzzleGame({ puzzle }: PuzzleGameProps) {
       <PuzzleGrid
         grid={state.grid}
         targetWords={state.targetWords}
-        onSlideRowLeft={slideRowLeft}
-        onSlideRowRight={slideRowRight}
         onSlideColUp={slideColUp}
         onSlideColDown={slideColDown}
       />

@@ -4,7 +4,6 @@ import {
   createGame,
   getElapsedMs,
   slideCol,
-  slideRow,
   type GameState,
 } from "@wordsort/game-logic";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,8 +11,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export interface UsePuzzleReturn {
   state: GameState;
   elapsedMs: number;
-  slideRowLeft: (rowIndex: number) => void;
-  slideRowRight: (rowIndex: number) => void;
   slideColUp: (colIndex: number) => void;
   slideColDown: (colIndex: number) => void;
   reset: () => void;
@@ -47,14 +44,6 @@ export function usePuzzle(words: string[]): UsePuzzleReturn {
     };
   }, [state]);
 
-  const slideRowLeft = useCallback((rowIndex: number) => {
-    setState((s) => slideRow(s, rowIndex, "left"));
-  }, []);
-
-  const slideRowRight = useCallback((rowIndex: number) => {
-    setState((s) => slideRow(s, rowIndex, "right"));
-  }, []);
-
   const slideColUp = useCallback((colIndex: number) => {
     setState((s) => slideCol(s, colIndex, "up"));
   }, []);
@@ -72,8 +61,6 @@ export function usePuzzle(words: string[]): UsePuzzleReturn {
   return {
     state,
     elapsedMs,
-    slideRowLeft,
-    slideRowRight,
     slideColUp,
     slideColDown,
     reset,
