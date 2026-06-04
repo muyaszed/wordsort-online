@@ -3,12 +3,21 @@ import type { Server as HTTPServer } from 'node:http';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
+import pino from 'pino';
+import { z } from 'zod';
 import { createDb, word_sets, leaderboard, asc, eq } from '@wordsort/db';
 import { attachSocketIO } from './ws';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is required');
 }
+
+export const logger = pino(
+  process.env.NODE_ENV !== 'production'
+    ? { transport: { target: 'pino-pretty', options: { colorize: true } } }
+    : {},
+);
 
 const db = createDb(process.env.DATABASE_URL);
 const app = new Hono().basePath('/api');
@@ -21,6 +30,30 @@ app.use(
   }),
 );
 
+app.use('*', async (c, next) => {
+  const start = Date.now();
+  await next();
+  logger.info({ method: c.req.method, path: c.req.path, status: c.res.status, ms: Date.now() - start });
+});
+
+app.onError((err, c) => {
+  if (err instanceof HTTPException) {
+    return c.json({ error: err.message }, err.status);
+  }
+  if (err instanceof z.ZodError) {
+    return c.json({ error: 'Validation failed', issues: err.issues }, 400);
+  }
+  logger.error({ err }, 'Unhandled error');
+  return c.json({ error: 'Internal server error' }, 500);
+});
+
+const scoreBodySchema = z.object({
+  name: z.string().min(1, 'name is required'),
+  steps: z.number().int().min(1, 'steps must be a positive integer'),
+  timeSeconds: z.number().int().min(1, 'timeSeconds must be a positive integer'),
+});
+
+
 // GET /api/words — return the current active word set
 app.get('/words', async (c) => {
   const [wordSet] = await db
@@ -30,7 +63,7 @@ app.get('/words', async (c) => {
     .limit(1);
 
   if (!wordSet) {
-    return c.json({ error: 'No active word set found' }, 404);
+    throw new HTTPException(404, { message: 'No active word set found' });
   }
 
   return c.json({
@@ -42,24 +75,14 @@ app.get('/words', async (c) => {
 
 // POST /api/scores — submit a leaderboard score
 app.post('/scores', async (c) => {
-  let body: unknown;
+  let raw: unknown;
   try {
-    body = await c.req.json();
+    raw = await c.req.json();
   } catch {
-    return c.json({ error: 'Invalid JSON body' }, 400);
+    throw new HTTPException(400, { message: 'Invalid JSON body' });
   }
 
-  const { name, steps, timeSeconds } = body as Record<string, unknown>;
-
-  if (typeof name !== 'string' || !name.trim()) {
-    return c.json({ error: 'name is required' }, 400);
-  }
-  if (typeof steps !== 'number' || steps < 1) {
-    return c.json({ error: 'steps must be a positive number' }, 400);
-  }
-  if (typeof timeSeconds !== 'number' || timeSeconds < 1) {
-    return c.json({ error: 'timeSeconds must be a positive number' }, 400);
-  }
+  const { name, steps, timeSeconds } = scoreBodySchema.parse(raw);
 
   const [entry] = await db
     .insert(leaderboard)
@@ -107,7 +130,7 @@ app.get('/leaderboard', async (c) => {
 const port = parseInt(process.env.PORT ?? '3001', 10);
 // serve() returns an HTTP/1 server at runtime; cast needed due to Hono's union type
 const httpServer = serve({ fetch: app.fetch, port }, () => {
-  console.log(`API listening on http://localhost:${port}`);
+  logger.info(`API listening on http://localhost:${port}`);
 }) as unknown as HTTPServer;
 
 attachSocketIO(httpServer);
