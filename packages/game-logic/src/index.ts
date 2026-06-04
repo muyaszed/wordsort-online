@@ -1,2 +1,10 @@
-export * from "./types.js";
-export * from "./sorting.js";
+export type { GameState, Grid, SlideDirection, Tile } from './types.js';
+export {
+  checkSolved,
+  createGame,
+  getElapsedMs,
+  getRowWord,
+  slideCol,
+  slideRow,
+  validateWords,
+} from './engine.js';

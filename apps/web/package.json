@@ -1,26 +1,20 @@
 {
   "name": "@wordsort/web",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
     "dev": "next dev --turbopack",
-    "lint": "next lint --max-warnings 0",
-    "typecheck": "tsc --noEmit",
-    "start": "next start"
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@wordsort/db": "workspace:*",
     "@wordsort/game-logic": "workspace:*",
-    "@wordsort/ui": "workspace:*",
     "next": "^15.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@wordsort/eslint-config": "workspace:*",
-    "@wordsort/tailwind-config": "workspace:*",
-    "@wordsort/typescript-config": "workspace:*",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

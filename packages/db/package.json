@@ -1,26 +1,27 @@
 {
   "name": "@wordsort/db",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "license": "MIT",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit",
-    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "dependencies": {
-    "drizzle-orm": "^0.36.3",
-    "postgres": "^3.4.4"
+    "drizzle-orm": "^0.36.4",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@wordsort/eslint-config": "workspace:*",
     "@wordsort/typescript-config": "workspace:*",
     "drizzle-kit": "^0.28.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5"
   }
 }

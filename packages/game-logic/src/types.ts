@@ -1,14 +1,17 @@
-export interface Word {
+export type Tile = {
   id: string;
-  text: string;
-  category: string;
-}
+  letter: string;
+};
 
-export interface GameState {
-  words: Word[];
-  sorted: Record<string, Word[]>;
-  complete: boolean;
-  score: number;
-}
+export type Grid = Tile[][];
 
-export type SortResult = "correct" | "incorrect" | "complete";
+export type SlideDirection = 'left' | 'right' | 'up' | 'down';
+
+export type GameState = {
+  grid: Grid;
+  targetWords: string[];
+  moveCount: number;
+  startedAt: number | null;
+  solvedAt: number | null;
+  solved: boolean;
+};

@@ -1,20 +1,21 @@
 {
   "name": "@wordsort/game-logic",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "license": "MIT",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "scripts": {
-    "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
   },
   "devDependencies": {
-    "@wordsort/eslint-config": "workspace:*",
-    "@wordsort/typescript-config": "workspace:*",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.5"
+    "@types/jest": "^29",
+    "jest": "^29",
+    "ts-jest": "^29",
+    "typescript": "^5"
   }
 }
