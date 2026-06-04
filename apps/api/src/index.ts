@@ -1,6 +1,10 @@
+import 'dotenv/config';
+import type { Server as HTTPServer } from 'node:http';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { createDb, word_sets, leaderboard, asc, eq } from '@wordsort/db';
+import { attachSocketIO } from './ws';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is required');
@@ -8,6 +12,14 @@ if (!process.env.DATABASE_URL) {
 
 const db = createDb(process.env.DATABASE_URL);
 const app = new Hono().basePath('/api');
+
+app.use(
+  '*',
+  cors({
+    origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+  }),
+);
 
 // GET /api/words — return the current active word set
 app.get('/words', async (c) => {
@@ -93,6 +105,9 @@ app.get('/leaderboard', async (c) => {
 });
 
 const port = parseInt(process.env.PORT ?? '3001', 10);
-serve({ fetch: app.fetch, port }, () => {
+// serve() returns an HTTP/1 server at runtime; cast needed due to Hono's union type
+const httpServer = serve({ fetch: app.fetch, port }, () => {
   console.log(`API listening on http://localhost:${port}`);
-});
+}) as unknown as HTTPServer;
+
+attachSocketIO(httpServer);

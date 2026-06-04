@@ -19,8 +19,6 @@
     "postgres": "^3.4.9"
   },
   "devDependencies": {
-    "@wordsort/eslint-config": "workspace:*",
-    "@wordsort/typescript-config": "workspace:*",
     "drizzle-kit": "^0.28.1",
     "typescript": "^5"
   }
