@@ -64,3 +64,21 @@ export const puzzle_queue = pgTable('puzzle_queue', {
   created_at: timestamp('created_at').notNull().defaultNow(),
   updated_at: timestamp('updated_at').notNull().defaultNow(),
 });
+
+// Daily word sets for the wordsort game (4×5-letter + 1×4-letter words)
+export const word_sets = pgTable('word_sets', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  puzzle_date: date('puzzle_date').notNull().unique(),
+  words: text('words').array().notNull(),
+  is_active: boolean('is_active').notNull().default(false),
+  created_at: timestamp('created_at').notNull().defaultNow(),
+});
+
+// Anonymous leaderboard entries
+export const leaderboard = pgTable('leaderboard', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  player_name: text('player_name').notNull(),
+  steps: integer('steps').notNull(),
+  time_seconds: integer('time_seconds').notNull(),
+  submitted_at: timestamp('submitted_at').notNull().defaultNow(),
+});
