@@ -8,6 +8,8 @@ import pino from 'pino';
 import { z } from 'zod';
 import { createDb, word_sets, leaderboard, asc, eq } from '@wordsort/db';
 import { attachSocketIO } from './ws';
+import { authRouter } from './auth/routes';
+import { attachUser } from './auth/middleware';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is required');
@@ -26,7 +28,8 @@ app.use(
   '*',
   cors({
     origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 
@@ -35,6 +38,9 @@ app.use('*', async (c, next) => {
   await next();
   logger.info({ method: c.req.method, path: c.req.path, status: c.res.status, ms: Date.now() - start });
 });
+
+app.use('*', attachUser);
+app.route('/auth', authRouter);
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
