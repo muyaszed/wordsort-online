@@ -42,6 +42,8 @@ app.use('*', async (c, next) => {
 app.use('*', attachUser);
 app.route('/auth', authRouter);
 
+app.get('/health', (c) => c.json({ status: 'ok', uptime: process.uptime() }));
+
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
     return c.json({ error: err.message }, err.status);
@@ -135,8 +137,8 @@ app.get('/leaderboard', async (c) => {
 
 const port = parseInt(process.env.PORT ?? '3001', 10);
 // serve() returns an HTTP/1 server at runtime; cast needed due to Hono's union type
-const httpServer = serve({ fetch: app.fetch, port }, () => {
-  logger.info(`API listening on http://localhost:${port}`);
+const httpServer = serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, () => {
+  logger.info(`API listening on http://0.0.0.0:${port}`);
 }) as unknown as HTTPServer;
 
 attachSocketIO(httpServer);
