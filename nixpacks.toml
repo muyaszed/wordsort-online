@@ -1,6 +1,5 @@
 [phases.install]
-# Install all deps including devDependencies so tsx is available at runtime
-cmds = ["NODE_ENV=development pnpm install --frozen-lockfile"]
+cmds = ["pnpm install --frozen-lockfile"]
 
 [phases.build]
 # No compilation needed — tsx runs TypeScript source directly at startup
