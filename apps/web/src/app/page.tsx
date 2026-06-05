@@ -1,7 +1,23 @@
 import { PuzzleGame } from "@/components/PuzzleGame";
-import { DAILY_PUZZLE } from "@/lib/sample-data";
+import { fetchDailyWords } from "@/lib/api-client";
+import { DAILY_PUZZLE, type PuzzleDefinition } from "@/lib/sample-data";
 
-export default function Home() {
+export default async function Home() {
+  let puzzle: PuzzleDefinition = DAILY_PUZZLE;
+
+  const wordSet = await fetchDailyWords();
+  if (wordSet) {
+    puzzle = {
+      id: wordSet.id,
+      date: wordSet.date,
+      title: new Date(wordSet.date).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+      }),
+      words: wordSet.words,
+    };
+  }
+
   return (
     <main className="flex flex-col items-center justify-start min-h-dvh px-4 py-6 gap-6">
       <header className="text-center">
@@ -12,7 +28,7 @@ export default function Home() {
           Slide rows and columns to form words
         </p>
       </header>
-      <PuzzleGame puzzle={DAILY_PUZZLE} />
+      <PuzzleGame puzzle={puzzle} />
     </main>
   );
 }

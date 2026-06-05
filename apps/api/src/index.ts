@@ -40,6 +40,8 @@ app.use('*', async (c, next) => {
   logger.info({ method: c.req.method, path: c.req.path, status: c.res.status, ms: Date.now() - start });
 });
 
+app.get('/health', (c) => c.json({ status: 'ok', uptime: process.uptime() }));
+
 app.use('*', attachUser);
 app.route('/auth', authRouter);
 app.route('/puzzles', puzzleRouter);

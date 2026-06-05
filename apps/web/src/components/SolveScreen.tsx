@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { submitScore } from "@/lib/api-client";
 
 function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
@@ -18,12 +19,6 @@ interface SolveScreenProps {
   onReset: () => void;
 }
 
-interface LeaderboardEntry {
-  name: string;
-  steps: number;
-  time_seconds: number;
-}
-
 export function SolveScreen({
   elapsedMs,
   moveCount,
@@ -39,15 +34,12 @@ export function SolveScreen({
     if (!name.trim()) return;
     setSubmitting(true);
 
-    const entry: LeaderboardEntry = {
+    await submitScore({
       name: name.trim().slice(0, 20),
       steps: moveCount,
-      time_seconds: Math.floor(elapsedMs / 1000),
-    };
+      timeSeconds: Math.floor(elapsedMs / 1000),
+    });
 
-    // Score submission — API not yet wired; log for now
-    console.log("Score submitted:", entry);
-    await new Promise((r) => setTimeout(r, 400));
     setSubmitting(false);
     setSubmitted(true);
   };
