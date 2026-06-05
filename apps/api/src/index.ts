@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { createDb, word_sets, leaderboard, asc, eq } from '@wordsort/db';
 import { attachSocketIO } from './ws';
 import { authRouter } from './auth/routes';
+import { puzzleRouter } from './puzzles/routes';
 import { attachUser } from './auth/middleware';
 
 if (!process.env.DATABASE_URL) {
@@ -41,6 +42,7 @@ app.use('*', async (c, next) => {
 
 app.use('*', attachUser);
 app.route('/auth', authRouter);
+app.route('/puzzles', puzzleRouter);
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
