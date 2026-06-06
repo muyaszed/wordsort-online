@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
+    "@sentry/node": "^10.56.0",
     "@wordsort/db": "workspace:*",
     "arctic": "^2.0.0",
     "bcryptjs": "^2.4.3",

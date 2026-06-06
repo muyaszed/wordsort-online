@@ -1,4 +1,10 @@
 import 'dotenv/config';
+import * as Sentry from '@sentry/node';
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 1.0 });
+}
+
 import type { Server as HTTPServer } from 'node:http';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
@@ -52,6 +58,7 @@ app.onError((err, c) => {
     return c.json({ error: 'Validation failed', issues: err.issues }, 400);
   }
   logger.error({ err }, 'Unhandled error');
+  Sentry.captureException(err);
   return c.json({ error: 'Internal server error' }, 500);
 });
 
