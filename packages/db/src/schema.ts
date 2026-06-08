@@ -87,7 +87,7 @@ export const word_sets = pgTable('word_sets', {
   created_at: timestamp('created_at').notNull().defaultNow(),
 });
 
-// Anonymous leaderboard entries
+// Leaderboard entries — anonymous by default; user_id set when submitted by an authenticated user
 export const leaderboard = pgTable('leaderboard', {
   id: uuid('id').defaultRandom().primaryKey(),
   player_name: text('player_name').notNull(),
@@ -95,4 +95,5 @@ export const leaderboard = pgTable('leaderboard', {
   time_seconds: integer('time_seconds').notNull(),
   puzzle_date: date('puzzle_date').notNull().default(sql`CURRENT_DATE`),
   submitted_at: timestamp('submitted_at').notNull().defaultNow(),
+  user_id: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
 });
