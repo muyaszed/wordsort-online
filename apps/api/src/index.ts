@@ -95,8 +95,8 @@ app.get('/words', async (c) => {
   });
 });
 
-// POST /api/scores — auth required; save score and invalidate leaderboard cache
-app.post('/scores', requireAuth, async (c) => {
+// POST /api/scores — anonymous allowed; user_id stored when caller is authenticated
+app.post('/scores', async (c) => {
   let raw: unknown;
   try {
     raw = await c.req.json();
