@@ -12,10 +12,11 @@ import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import pino from 'pino';
 import { z } from 'zod';
-import { createDb, word_sets, leaderboard, asc, eq } from '@wordsort/db';
+import { createDb, word_sets, leaderboard, asc, eq, sql } from '@wordsort/db';
 import { attachSocketIO } from './ws';
 import { authRouter } from './auth/routes';
-import { attachUser } from './auth/middleware';
+import { attachUser, requireAuth } from './auth/middleware';
+import { cacheGet, cacheSet, cacheInvalidateLeaderboard } from './redis';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is required');
@@ -68,6 +69,10 @@ const scoreBodySchema = z.object({
   timeSeconds: z.number().int().min(1, 'timeSeconds must be a positive integer'),
 });
 
+const paginationSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});
 
 // GET /api/words — return the current active word set
 app.get('/words', async (c) => {
@@ -88,8 +93,8 @@ app.get('/words', async (c) => {
   });
 });
 
-// POST /api/scores — submit a leaderboard score
-app.post('/scores', async (c) => {
+// POST /api/scores — auth required; save score and invalidate leaderboard cache
+app.post('/scores', requireAuth, async (c) => {
   let raw: unknown;
   try {
     raw = await c.req.json();
@@ -99,14 +104,27 @@ app.post('/scores', async (c) => {
 
   const { name, steps, timeSeconds } = scoreBodySchema.parse(raw);
 
+  const [wordSet] = await db
+    .select({ puzzle_date: word_sets.puzzle_date })
+    .from(word_sets)
+    .where(eq(word_sets.is_active, true))
+    .limit(1);
+
+  if (!wordSet) {
+    throw new HTTPException(422, { message: 'No active puzzle found' });
+  }
+
   const [entry] = await db
     .insert(leaderboard)
     .values({
       player_name: name.trim(),
       steps,
       time_seconds: timeSeconds,
+      puzzle_date: wordSet.puzzle_date,
     })
     .returning();
+
+  await cacheInvalidateLeaderboard(wordSet.puzzle_date);
 
   return c.json(
     {
@@ -120,26 +138,85 @@ app.post('/scores', async (c) => {
   );
 });
 
-// GET /api/leaderboard — top scores sorted by steps asc, then time asc
-app.get('/leaderboard', async (c) => {
-  const limitParam = c.req.query('limit');
-  const limit = Math.min(Math.max(parseInt(limitParam ?? '10', 10) || 10, 1), 100);
+// GET /api/leaderboard/daily — today's puzzle top scores, paginated, Redis-cached (5min TTL)
+app.get('/leaderboard/daily', async (c) => {
+  const { page, limit } = paginationSchema.parse(c.req.query());
+  const offset = (page - 1) * limit;
 
-  const entries = await db
-    .select()
-    .from(leaderboard)
-    .orderBy(asc(leaderboard.steps), asc(leaderboard.time_seconds))
-    .limit(limit);
+  const [wordSet] = await db
+    .select({ puzzle_date: word_sets.puzzle_date })
+    .from(word_sets)
+    .where(eq(word_sets.is_active, true))
+    .limit(1);
 
-  return c.json(
-    entries.map((e) => ({
+  const today = wordSet?.puzzle_date ?? new Date().toISOString().slice(0, 10);
+  const cacheKey = `lb:daily:${today}:${page}:${limit}`;
+
+  const cached = await cacheGet(cacheKey);
+  if (cached) return c.json(cached);
+
+  const [entries, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(leaderboard)
+      .where(eq(leaderboard.puzzle_date, today))
+      .orderBy(asc(leaderboard.steps), asc(leaderboard.time_seconds))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: sql<number>`COUNT(*)::int` })
+      .from(leaderboard)
+      .where(eq(leaderboard.puzzle_date, today)),
+  ]);
+
+  const result = {
+    data: entries.map((e) => ({
       id: e.id,
       name: e.player_name,
       steps: e.steps,
       timeSeconds: e.time_seconds,
       submittedAt: e.submitted_at,
     })),
-  );
+    pagination: { page, limit, total },
+  };
+
+  await cacheSet(cacheKey, result);
+  return c.json(result);
+});
+
+// GET /api/leaderboard/alltime — all-time top scores, paginated, Redis-cached (5min TTL)
+app.get('/leaderboard/alltime', async (c) => {
+  const { page, limit } = paginationSchema.parse(c.req.query());
+  const offset = (page - 1) * limit;
+
+  const cacheKey = `lb:alltime:${page}:${limit}`;
+
+  const cached = await cacheGet(cacheKey);
+  if (cached) return c.json(cached);
+
+  const [entries, [{ total }]] = await Promise.all([
+    db
+      .select()
+      .from(leaderboard)
+      .orderBy(asc(leaderboard.steps), asc(leaderboard.time_seconds))
+      .limit(limit)
+      .offset(offset),
+    db.select({ total: sql<number>`COUNT(*)::int` }).from(leaderboard),
+  ]);
+
+  const result = {
+    data: entries.map((e) => ({
+      id: e.id,
+      name: e.player_name,
+      steps: e.steps,
+      timeSeconds: e.time_seconds,
+      submittedAt: e.submitted_at,
+    })),
+    pagination: { page, limit, total },
+  };
+
+  await cacheSet(cacheKey, result);
+  return c.json(result);
 });
 
 const port = parseInt(process.env.PORT ?? '3001', 10);

@@ -15,6 +15,20 @@
       "when": 1780461361713,
       "tag": "0001_parched_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780500000000,
+      "tag": "0002_auth_system",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781222400000,
+      "tag": "0003_leaderboard_puzzle_date",
+      "breakpoints": true
     }
   ]
 }

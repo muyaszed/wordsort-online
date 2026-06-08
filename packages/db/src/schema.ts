@@ -8,6 +8,7 @@ import {
   timestamp,
   date,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 export const difficultyEnum = pgEnum('difficulty', ['easy', 'medium', 'hard']);
 export const puzzleStatusEnum = pgEnum('puzzle_status', ['draft', 'reviewed', 'published']);
@@ -92,5 +93,6 @@ export const leaderboard = pgTable('leaderboard', {
   player_name: text('player_name').notNull(),
   steps: integer('steps').notNull(),
   time_seconds: integer('time_seconds').notNull(),
+  puzzle_date: date('puzzle_date').notNull().default(sql`CURRENT_DATE`),
   submitted_at: timestamp('submitted_at').notNull().defaultNow(),
 });
