@@ -8,4 +8,5 @@ export function createDb(connectionString: string) {
 }
 
 export * from './schema';
+export * from './cache';
 export { asc, desc, eq, and, or, sql, gt, lt, gte, lte } from 'drizzle-orm';

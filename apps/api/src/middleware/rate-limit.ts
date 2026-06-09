@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { rateLimitIncr } from '../redis';
+import { rateLimitIncr } from '@wordsort/db';
 // Ensures ContextVariableMap augmentation for 'user' is in scope
 import type { attachUser } from '../auth/middleware';
 
