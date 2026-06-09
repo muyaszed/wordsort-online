@@ -5,6 +5,7 @@ import { verifyAccessToken, type TokenPayload } from './tokens';
 declare module 'hono' {
   interface ContextVariableMap {
     user: TokenPayload | null;
+    requestId: string;
   }
 }
 

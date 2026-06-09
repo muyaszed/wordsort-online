@@ -5,6 +5,7 @@ if (process.env.SENTRY_DSN) {
   Sentry.init({ dsn: process.env.SENTRY_DSN, tracesSampleRate: 1.0 });
 }
 
+import { randomUUID } from 'node:crypto';
 import type { Server as HTTPServer } from 'node:http';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
@@ -18,6 +19,7 @@ import { usersRouter, recalculateStreak } from './users/routes';
 import { puzzlesRouter } from './puzzles/routes';
 import { attachUser, requireAuth } from './auth/middleware';
 import { cacheGet, cacheSet, cacheInvalidateLeaderboard } from './redis';
+import { rateLimitMiddleware } from './middleware/rate-limit';
 import { logger } from './logger';
 import { startScheduler } from './scheduler';
 
@@ -34,32 +36,60 @@ app.use(
     origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
+    exposeHeaders: ['X-Request-Id'],
   }),
 );
 
 app.use('*', async (c, next) => {
+  const requestId = c.req.header('x-request-id') ?? randomUUID();
+  c.set('requestId', requestId);
+  await next();
+  c.header('X-Request-Id', requestId);
+});
+
+app.use('*', async (c, next) => {
   const start = Date.now();
   await next();
-  logger.info({ method: c.req.method, path: c.req.path, status: c.res.status, ms: Date.now() - start });
+  logger.info({
+    method: c.req.method,
+    path: c.req.path,
+    status: c.res.status,
+    ms: Date.now() - start,
+    requestId: c.get('requestId'),
+  });
 });
 
 app.use('*', attachUser);
+app.use('*', rateLimitMiddleware);
 app.route('/auth', authRouter);
 app.route('/users', usersRouter);
 app.route('/puzzles', puzzlesRouter);
 
 app.get('/health', (c) => c.json({ status: 'ok', uptime: process.uptime() }));
 
+function statusToCode(status: number): string {
+  const codes: Record<number, string> = {
+    400: 'BAD_REQUEST',
+    401: 'UNAUTHORIZED',
+    403: 'FORBIDDEN',
+    404: 'NOT_FOUND',
+    409: 'CONFLICT',
+    422: 'UNPROCESSABLE_ENTITY',
+    429: 'RATE_LIMITED',
+  };
+  return codes[status] ?? `HTTP_${status}`;
+}
+
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    return c.json({ error: err.message }, err.status);
+    return c.json({ error: err.message, code: statusToCode(err.status) }, err.status);
   }
   if (err instanceof z.ZodError) {
-    return c.json({ error: 'Validation failed', issues: err.issues }, 400);
+    return c.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: err.issues }, 400);
   }
   logger.error({ err }, 'Unhandled error');
   Sentry.captureException(err);
-  return c.json({ error: 'Internal server error' }, 500);
+  return c.json({ error: 'Internal server error', code: 'INTERNAL_ERROR' }, 500);
 });
 
 const scoreBodySchema = z.object({
