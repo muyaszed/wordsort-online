@@ -1,7 +1,6 @@
 import cron from 'node-cron';
-import { createDb, word_sets, eq } from '@wordsort/db';
+import { createDb, word_sets, eq, cacheSetWithTTL } from '@wordsort/db';
 import { logger } from './logger';
-import { cacheSetWithTTL } from './redis';
 
 function todayUTC(): string {
   return new Date().toISOString().slice(0, 10);

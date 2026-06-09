@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { createDb, word_sets, eq } from '@wordsort/db';
-import { cacheGet, cacheSetWithTTL } from '../redis';
+import { createDb, word_sets, eq, cacheGet, cacheSetWithTTL } from '@wordsort/db';
 
 function secondsUntilMidnightUTC(): number {
   const now = new Date();
