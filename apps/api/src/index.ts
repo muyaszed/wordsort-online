@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { createDb, word_sets, leaderboard, asc, eq, sql } from '@wordsort/db';
 import { attachSocketIO } from './ws';
 import { authRouter } from './auth/routes';
+import { usersRouter, recalculateStreak } from './users/routes';
 import { attachUser, requireAuth } from './auth/middleware';
 import { cacheGet, cacheSet, cacheInvalidateLeaderboard } from './redis';
 
@@ -35,7 +36,7 @@ app.use(
   '*',
   cors({
     origin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
-    allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   }),
 );
@@ -48,6 +49,7 @@ app.use('*', async (c, next) => {
 
 app.use('*', attachUser);
 app.route('/auth', authRouter);
+app.route('/users', usersRouter);
 
 app.get('/health', (c) => c.json({ status: 'ok', uptime: process.uptime() }));
 
@@ -93,7 +95,7 @@ app.get('/words', async (c) => {
   });
 });
 
-// POST /api/scores — auth required; save score and invalidate leaderboard cache
+// POST /api/scores — auth required; anonymous play is allowed but saving scores is not
 app.post('/scores', requireAuth, async (c) => {
   let raw: unknown;
   try {
@@ -114,6 +116,8 @@ app.post('/scores', requireAuth, async (c) => {
     throw new HTTPException(422, { message: 'No active puzzle found' });
   }
 
+  const user = c.get('user');
+
   const [entry] = await db
     .insert(leaderboard)
     .values({
@@ -121,10 +125,15 @@ app.post('/scores', requireAuth, async (c) => {
       steps,
       time_seconds: timeSeconds,
       puzzle_date: wordSet.puzzle_date,
+      user_id: user?.sub ?? null,
     })
     .returning();
 
   await cacheInvalidateLeaderboard(wordSet.puzzle_date);
+
+  if (user?.sub) {
+    await recalculateStreak(user.sub);
+  }
 
   return c.json(
     {
