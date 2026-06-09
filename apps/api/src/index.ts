@@ -10,24 +10,20 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
-import pino from 'pino';
 import { z } from 'zod';
 import { createDb, word_sets, leaderboard, asc, eq, sql } from '@wordsort/db';
 import { attachSocketIO } from './ws';
 import { authRouter } from './auth/routes';
 import { usersRouter, recalculateStreak } from './users/routes';
+import { puzzlesRouter } from './puzzles/routes';
 import { attachUser, requireAuth } from './auth/middleware';
 import { cacheGet, cacheSet, cacheInvalidateLeaderboard } from './redis';
+import { logger } from './logger';
+import { startScheduler } from './scheduler';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is required');
 }
-
-export const logger = pino(
-  process.env.NODE_ENV !== 'production'
-    ? { transport: { target: 'pino-pretty', options: { colorize: true } } }
-    : {},
-);
 
 const db = createDb(process.env.DATABASE_URL);
 const app = new Hono().basePath('/api');
@@ -50,6 +46,7 @@ app.use('*', async (c, next) => {
 app.use('*', attachUser);
 app.route('/auth', authRouter);
 app.route('/users', usersRouter);
+app.route('/puzzles', puzzlesRouter);
 
 app.get('/health', (c) => c.json({ status: 'ok', uptime: process.uptime() }));
 
@@ -232,6 +229,7 @@ const port = parseInt(process.env.PORT ?? '3001', 10);
 // serve() returns an HTTP/1 server at runtime; cast needed due to Hono's union type
 const httpServer = serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, () => {
   logger.info(`API listening on http://0.0.0.0:${port}`);
+  startScheduler(db);
 }) as unknown as HTTPServer;
 
 attachSocketIO(httpServer);

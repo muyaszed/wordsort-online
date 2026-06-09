@@ -40,6 +40,16 @@ export async function cacheSet(key: string, value: unknown): Promise<void> {
   }
 }
 
+export async function cacheSetWithTTL(key: string, value: unknown, ttlSeconds: number): Promise<void> {
+  try {
+    const r = getRedis();
+    if (!r) return;
+    await r.set(key, JSON.stringify(value), 'EX', Math.max(1, ttlSeconds));
+  } catch {
+    // ignore
+  }
+}
+
 export async function cacheInvalidateLeaderboard(puzzleDate: string): Promise<void> {
   try {
     const r = getRedis();
