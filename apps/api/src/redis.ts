@@ -50,6 +50,18 @@ export async function cacheSetWithTTL(key: string, value: unknown, ttlSeconds: n
   }
 }
 
+export async function rateLimitIncr(key: string, windowSec: number): Promise<number | null> {
+  try {
+    const r = getRedis();
+    if (!r) return null;
+    const count = await r.incr(key);
+    if (count === 1) await r.expire(key, windowSec);
+    return count;
+  } catch {
+    return null;
+  }
+}
+
 export async function cacheInvalidateLeaderboard(puzzleDate: string): Promise<void> {
   try {
     const r = getRedis();
