@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 interface CompletedPuzzle {
   puzzleId: string;
   elapsedMs: number;
+  mistakes: number;
   completedAt: string;
 }
 
@@ -11,7 +12,7 @@ interface GameStore {
   activePuzzleId: string | null;
   completedPuzzles: Record<string, CompletedPuzzle>;
   setActivePuzzle: (puzzleId: string) => void;
-  markPuzzleCompleted: (puzzleId: string, elapsedMs: number) => void;
+  markPuzzleCompleted: (puzzleId: string, elapsedMs: number, mistakes: number) => void;
   isPuzzleCompleted: (puzzleId: string) => boolean;
   getBestTime: (puzzleId: string) => number | null;
 }
@@ -24,13 +25,14 @@ export const useGameStore = create<GameStore>()(
 
       setActivePuzzle: (puzzleId) => set({ activePuzzleId: puzzleId }),
 
-      markPuzzleCompleted: (puzzleId, elapsedMs) =>
+      markPuzzleCompleted: (puzzleId, elapsedMs, mistakes) =>
         set((state) => ({
           completedPuzzles: {
             ...state.completedPuzzles,
             [puzzleId]: {
               puzzleId,
               elapsedMs,
+              mistakes,
               completedAt: new Date().toISOString(),
             },
           },
