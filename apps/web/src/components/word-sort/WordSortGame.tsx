@@ -37,7 +37,17 @@ export function WordSortGame({ categories, puzzleId, title }: WordSortGameProps)
       const squares = buildShareSquares(state.solvedIds, state.categories);
       markPuzzleCompleted(puzzleId, elapsedMs, state.mistakes, squares);
     }
-  }, [state.solved, puzzleId]);
+  }, [
+    state.solved,
+    state.solvedAt,
+    state.startedAt,
+    state.solvedIds,
+    state.categories,
+    state.mistakes,
+    puzzleId,
+    isPuzzleCompleted,
+    markPuzzleCompleted,
+  ]);
 
   const elapsedMs =
     state.solvedAt != null && state.startedAt != null
