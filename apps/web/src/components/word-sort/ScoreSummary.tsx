@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { formatTime } from "@/lib/daily-puzzle";
+import { copyToClipboard } from "@/lib/utils";
 
 interface ScoreSummaryProps {
   title?: string;
@@ -20,13 +21,19 @@ export function ScoreSummary({
   onPlayAgain,
 }: ScoreSummaryProps) {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
-  function handleShare() {
+  async function handleShare() {
     if (!shareText) return;
-    navigator.clipboard.writeText(shareText).then(() => {
+    const ok = await copyToClipboard(shareText);
+    if (ok) {
       setCopied(true);
+      setCopyFailed(false);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } else {
+      setCopyFailed(true);
+      setTimeout(() => setCopyFailed(false), 4000);
+    }
   }
 
   return (
@@ -59,9 +66,13 @@ export function ScoreSummary({
         {shareText && (
           <button
             onClick={handleShare}
-            className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
+            className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors text-white ${
+              copyFailed
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
           >
-            {copied ? "Copied!" : "Share score"}
+            {copied ? "Copied!" : copyFailed ? "Copy failed — try again" : "Share score"}
           </button>
         )}
         <a

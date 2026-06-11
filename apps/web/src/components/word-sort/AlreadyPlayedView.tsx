@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useCountdown } from "@/hooks/useCountdown";
 import { formatTime } from "@/lib/daily-puzzle";
+import { copyToClipboard } from "@/lib/utils";
 
 interface AlreadyPlayedViewProps {
   puzzleId: string;
@@ -22,17 +23,23 @@ export function AlreadyPlayedView({
 }: AlreadyPlayedViewProps) {
   const countdown = useCountdown();
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   const dateLabel = new Date(puzzleId + "T00:00:00Z").toLocaleDateString(
     "en-US",
     { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }
   );
 
-  function handleShare() {
-    navigator.clipboard.writeText(shareText).then(() => {
+  async function handleShare() {
+    const ok = await copyToClipboard(shareText);
+    if (ok) {
       setCopied(true);
+      setCopyFailed(false);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } else {
+      setCopyFailed(true);
+      setTimeout(() => setCopyFailed(false), 4000);
+    }
   }
 
   return (
@@ -78,9 +85,13 @@ export function AlreadyPlayedView({
         </p>
         <button
           onClick={handleShare}
-          className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
+          className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors text-white ${
+            copyFailed
+              ? "bg-red-500 hover:bg-red-600"
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
         >
-          {copied ? "Copied!" : "Share score"}
+          {copied ? "Copied!" : copyFailed ? "Copy failed — try again" : "Share score"}
         </button>
       </div>
     </motion.div>
