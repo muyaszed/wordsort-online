@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 interface ScoreSummaryProps {
   title?: string;
   elapsedMs: number;
   mistakes: number;
+  shareText?: string;
   onPlayAgain: () => void;
 }
 
@@ -16,7 +18,23 @@ function formatTime(ms: number): string {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export function ScoreSummary({ title, elapsedMs, mistakes, onPlayAgain }: ScoreSummaryProps) {
+export function ScoreSummary({
+  title,
+  elapsedMs,
+  mistakes,
+  shareText,
+  onPlayAgain,
+}: ScoreSummaryProps) {
+  const [copied, setCopied] = useState(false);
+
+  function handleShare() {
+    if (!shareText) return;
+    navigator.clipboard.writeText(shareText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -44,9 +62,17 @@ export function ScoreSummary({ title, elapsedMs, mistakes, onPlayAgain }: ScoreS
       )}
 
       <div className="mt-5 flex flex-col gap-2">
+        {shareText && (
+          <button
+            onClick={handleShare}
+            className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
+          >
+            {copied ? "Copied!" : "Share score"}
+          </button>
+        )}
         <a
           href="/sign-in"
-          className="block w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition-colors"
+          className="block w-full py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm hover:bg-slate-700 transition-colors"
         >
           Save your score
         </a>

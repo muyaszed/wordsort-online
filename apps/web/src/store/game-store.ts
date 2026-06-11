@@ -6,13 +6,14 @@ interface CompletedPuzzle {
   elapsedMs: number;
   mistakes: number;
   completedAt: string;
+  shareSquares: string;
 }
 
 interface GameStore {
   activePuzzleId: string | null;
   completedPuzzles: Record<string, CompletedPuzzle>;
   setActivePuzzle: (puzzleId: string) => void;
-  markPuzzleCompleted: (puzzleId: string, elapsedMs: number, mistakes: number) => void;
+  markPuzzleCompleted: (puzzleId: string, elapsedMs: number, mistakes: number, shareSquares: string) => void;
   isPuzzleCompleted: (puzzleId: string) => boolean;
   getBestTime: (puzzleId: string) => number | null;
 }
@@ -25,7 +26,7 @@ export const useGameStore = create<GameStore>()(
 
       setActivePuzzle: (puzzleId) => set({ activePuzzleId: puzzleId }),
 
-      markPuzzleCompleted: (puzzleId, elapsedMs, mistakes) =>
+      markPuzzleCompleted: (puzzleId, elapsedMs, mistakes, shareSquares) =>
         set((state) => ({
           completedPuzzles: {
             ...state.completedPuzzles,
@@ -34,6 +35,7 @@ export const useGameStore = create<GameStore>()(
               elapsedMs,
               mistakes,
               completedAt: new Date().toISOString(),
+              shareSquares,
             },
           },
         })),
