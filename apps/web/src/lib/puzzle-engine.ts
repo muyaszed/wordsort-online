@@ -58,8 +58,12 @@ function findWordHorizontal(grid: PuzzleGrid, word: string): number[] | null {
       if (cells.every((c) => c !== null) && cells.join("") === word)
         return [start, start + 1, start + 2, start + 3, start + 4];
     } else {
+      // null at right end: word occupies cols 0–3
       if (cells[4] === null && cells.slice(0, 4).join("") === word)
         return [start, start + 1, start + 2, start + 3];
+      // null at left end: word occupies cols 1–4
+      if (cells[0] === null && cells.slice(1).join("") === word)
+        return [start + 1, start + 2, start + 3, start + 4];
     }
   }
   return null;
@@ -72,8 +76,12 @@ function findWordVertical(grid: PuzzleGrid, word: string): number[] | null {
       if (cells.every((c) => c !== null) && cells.join("") === word)
         return [col, col + 5, col + 10, col + 15, col + 20];
     } else {
+      // null at bottom: word occupies rows 0–3
       if (cells[4] === null && cells.slice(0, 4).join("") === word)
         return [col, col + 5, col + 10, col + 15];
+      // null at top: word occupies rows 1–4
+      if (cells[0] === null && cells.slice(1).join("") === word)
+        return [col + 5, col + 10, col + 15, col + 20];
     }
   }
   return null;
@@ -87,8 +95,11 @@ function findWordHorizontalReversed(grid: PuzzleGrid, word: string): number[] | 
       if (cells.every((c) => c !== null) && [...cells].reverse().join("") === word)
         return [start, start + 1, start + 2, start + 3, start + 4];
     } else {
-      // null on left; cells 1–4 read right-to-left spell the word
-      if (cells[0] === null && cells.slice(1).reverse().join("") === word)
+      // null at right end: cols 0–3 read right-to-left
+      if (cells[4] === null && [...cells.slice(0, 4)].reverse().join("") === word)
+        return [start, start + 1, start + 2, start + 3];
+      // null at left end: cols 1–4 read right-to-left
+      if (cells[0] === null && [...cells.slice(1)].reverse().join("") === word)
         return [start + 1, start + 2, start + 3, start + 4];
     }
   }
@@ -102,8 +113,11 @@ function findWordVerticalReversed(grid: PuzzleGrid, word: string): number[] | nu
       if (cells.every((c) => c !== null) && [...cells].reverse().join("") === word)
         return [col, col + 5, col + 10, col + 15, col + 20];
     } else {
-      // null at top (row 0); rows 1–4 read bottom-to-top spell the word
-      if (cells[0] === null && cells.slice(1).reverse().join("") === word)
+      // null at bottom: rows 0–3 read bottom-to-top
+      if (cells[4] === null && [...cells.slice(0, 4)].reverse().join("") === word)
+        return [col, col + 5, col + 10, col + 15];
+      // null at top: rows 1–4 read bottom-to-top
+      if (cells[0] === null && [...cells.slice(1)].reverse().join("") === word)
         return [col + 5, col + 10, col + 15, col + 20];
     }
   }
