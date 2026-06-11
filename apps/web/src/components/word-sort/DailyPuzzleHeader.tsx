@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useCountdown } from "@/hooks/useCountdown";
 import { useGameStore } from "@/store/game-store";
 import { getYesterdayPuzzleId } from "@/lib/daily-puzzle";
@@ -19,18 +18,7 @@ function formatElapsed(ms: number): string {
 export function DailyPuzzleHeader({ puzzleId, title }: DailyPuzzleHeaderProps) {
   const countdown = useCountdown();
   const completedPuzzles = useGameStore((s) => s.completedPuzzles);
-  const [yesterdayResult, setYesterdayResult] = useState<{
-    elapsedMs: number;
-    mistakes: number;
-  } | null>(null);
-
-  useEffect(() => {
-    const yesterdayId = getYesterdayPuzzleId();
-    const result = completedPuzzles[yesterdayId];
-    if (result) {
-      setYesterdayResult({ elapsedMs: result.elapsedMs, mistakes: result.mistakes });
-    }
-  }, [completedPuzzles]);
+  const yesterdayResult = completedPuzzles[getYesterdayPuzzleId()] ?? null;
 
   const dateLabel = new Date(puzzleId + "T00:00:00Z").toLocaleDateString(
     "en-US",

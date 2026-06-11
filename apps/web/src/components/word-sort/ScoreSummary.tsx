@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { formatTime } from "@/lib/daily-puzzle";
 
 interface ScoreSummaryProps {
   title?: string;
@@ -9,13 +10,6 @@ interface ScoreSummaryProps {
   mistakes: number;
   shareText?: string;
   onPlayAgain: () => void;
-}
-
-function formatTime(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 export function ScoreSummary({

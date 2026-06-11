@@ -32,7 +32,7 @@ const COLOR_EMOJI: Record<ZoneColor, string> = {
   purple: "🟪",
 };
 
-function formatTime(ms: number): string {
+export function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;

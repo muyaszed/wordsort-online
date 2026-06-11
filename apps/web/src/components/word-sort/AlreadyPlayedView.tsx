@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useCountdown } from "@/hooks/useCountdown";
+import { formatTime } from "@/lib/daily-puzzle";
 
 interface AlreadyPlayedViewProps {
   puzzleId: string;
@@ -10,13 +11,6 @@ interface AlreadyPlayedViewProps {
   elapsedMs: number;
   mistakes: number;
   shareText: string;
-}
-
-function formatTime(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 export function AlreadyPlayedView({
