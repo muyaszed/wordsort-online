@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { canSlide, findEmpty, type PuzzleGrid, type PuzzleState } from "@/lib/puzzle-engine";
+import { canSlide, findEmpty, getSolvedCells, getSolvedWordSet, type PuzzleGrid, type PuzzleState } from "@/lib/puzzle-engine";
 
 interface PuzzleGridProps {
   state: PuzzleState;
@@ -20,19 +20,8 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
   const emptyRow = Math.floor(emptyIndex / 5);
   const emptyCol = emptyIndex % 5;
 
-  const isRowSolved = useCallback(
-    (rowIndex: number) => {
-      const target = targetWords[rowIndex];
-      if (!target) return false;
-      const start = rowIndex * 5;
-      const cells = grid.slice(start, start + 5);
-      if (target.length === 5) {
-        return cells.every((c) => c !== null) && cells.join("") === target;
-      }
-      return cells[4] === null && cells.slice(0, 4).join("") === target;
-    },
-    [grid, targetWords]
-  );
+  const solvedCells = getSolvedCells(state);
+  const solvedWords = getSolvedWordSet(state);
 
   const handleClick = useCallback(
     (index: number) => {
@@ -105,9 +94,8 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
         }}
       >
         {grid.map((cell, index) => {
-          const row = Math.floor(index / 5);
           const slideable = canSlide(grid, index);
-          const rowSolved = isRowSolved(row);
+          const isCellSolved = solvedCells.has(index);
           const isAnim = animating?.index === index;
 
           if (cell === null) {
@@ -139,7 +127,7 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
                 slideable && !state.solved
                   ? "cursor-pointer hover:border-indigo-400 hover:shadow-md active:scale-95"
                   : "cursor-default",
-                rowSolved
+                isCellSolved
                   ? "bg-emerald-100 border-emerald-400 text-emerald-800"
                   : "bg-white border-slate-200 text-slate-800",
               ]
@@ -159,7 +147,7 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
         </p>
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           {targetWords.map((word, i) => {
-            const solved = isRowSolved(i);
+            const solved = solvedWords.has(word);
             return (
               <div key={i} className="flex items-center gap-1.5">
                 <div

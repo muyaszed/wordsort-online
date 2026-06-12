@@ -50,21 +50,106 @@ export function slideTile(
   };
 }
 
-export function checkSolved(state: PuzzleState): boolean {
+function findWordHorizontal(grid: PuzzleGrid, word: string): number[] | null {
   for (let row = 0; row < 5; row++) {
-    const target = state.targetWords[row];
-    if (!target) return false;
     const start = row * 5;
-    const rowCells = state.grid.slice(start, start + 5);
-    if (target.length === 5) {
-      if (rowCells.some((c) => c === null)) return false;
-      if (rowCells.join("") !== target) return false;
+    const cells = grid.slice(start, start + 5);
+    if (word.length === 5) {
+      if (cells.every((c) => c !== null) && cells.join("") === word)
+        return [start, start + 1, start + 2, start + 3, start + 4];
     } else {
-      if (rowCells[4] !== null) return false;
-      if (rowCells.slice(0, 4).join("") !== target) return false;
+      // null at right end: word occupies cols 0–3
+      if (cells[4] === null && cells.slice(0, 4).join("") === word)
+        return [start, start + 1, start + 2, start + 3];
+      // null at left end: word occupies cols 1–4
+      if (cells[0] === null && cells.slice(1).join("") === word)
+        return [start + 1, start + 2, start + 3, start + 4];
     }
   }
-  return true;
+  return null;
+}
+
+function findWordVertical(grid: PuzzleGrid, word: string): number[] | null {
+  for (let col = 0; col < 5; col++) {
+    const cells = [0, 1, 2, 3, 4].map((row) => grid[row * 5 + col]);
+    if (word.length === 5) {
+      if (cells.every((c) => c !== null) && cells.join("") === word)
+        return [col, col + 5, col + 10, col + 15, col + 20];
+    } else {
+      // null at bottom: word occupies rows 0–3
+      if (cells[4] === null && cells.slice(0, 4).join("") === word)
+        return [col, col + 5, col + 10, col + 15];
+      // null at top: word occupies rows 1–4
+      if (cells[0] === null && cells.slice(1).join("") === word)
+        return [col + 5, col + 10, col + 15, col + 20];
+    }
+  }
+  return null;
+}
+
+function findWordHorizontalReversed(grid: PuzzleGrid, word: string): number[] | null {
+  for (let row = 0; row < 5; row++) {
+    const start = row * 5;
+    const cells = grid.slice(start, start + 5);
+    if (word.length === 5) {
+      if (cells.every((c) => c !== null) && [...cells].reverse().join("") === word)
+        return [start, start + 1, start + 2, start + 3, start + 4];
+    } else {
+      // null at right end: cols 0–3 read right-to-left
+      if (cells[4] === null && [...cells.slice(0, 4)].reverse().join("") === word)
+        return [start, start + 1, start + 2, start + 3];
+      // null at left end: cols 1–4 read right-to-left
+      if (cells[0] === null && [...cells.slice(1)].reverse().join("") === word)
+        return [start + 1, start + 2, start + 3, start + 4];
+    }
+  }
+  return null;
+}
+
+function findWordVerticalReversed(grid: PuzzleGrid, word: string): number[] | null {
+  for (let col = 0; col < 5; col++) {
+    const cells = [0, 1, 2, 3, 4].map((row) => grid[row * 5 + col]);
+    if (word.length === 5) {
+      if (cells.every((c) => c !== null) && [...cells].reverse().join("") === word)
+        return [col, col + 5, col + 10, col + 15, col + 20];
+    } else {
+      // null at bottom: rows 0–3 read bottom-to-top
+      if (cells[4] === null && [...cells.slice(0, 4)].reverse().join("") === word)
+        return [col, col + 5, col + 10, col + 15];
+      // null at top: rows 1–4 read bottom-to-top
+      if (cells[0] === null && [...cells.slice(1)].reverse().join("") === word)
+        return [col + 5, col + 10, col + 15, col + 20];
+    }
+  }
+  return null;
+}
+
+function findWord(grid: PuzzleGrid, word: string): number[] | null {
+  return (
+    findWordHorizontal(grid, word) ??
+    findWordVertical(grid, word) ??
+    findWordHorizontalReversed(grid, word) ??
+    findWordVerticalReversed(grid, word)
+  );
+}
+
+export function getSolvedCells(state: PuzzleState): Set<number> {
+  const solved = new Set<number>();
+  for (const word of state.targetWords) {
+    const indices = findWord(state.grid, word);
+    if (indices) indices.forEach((i) => solved.add(i));
+  }
+  return solved;
+}
+
+export function getSolvedWordSet(state: PuzzleState): Set<string> {
+  return new Set(
+    state.targetWords.filter((word) => findWord(state.grid, word) !== null)
+  );
+}
+
+export function checkSolved(state: PuzzleState): boolean {
+  return state.targetWords.every((word) => findWord(state.grid, word) !== null);
 }
 
 export function getElapsed(state: PuzzleState, now = Date.now()): number {
