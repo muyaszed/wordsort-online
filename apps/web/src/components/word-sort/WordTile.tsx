@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import type { PanInfo } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import type { PanInfo, TargetAndTransition } from "framer-motion";
 import type { WordTileData } from "@/lib/word-sort-types";
 
 interface WordTileProps {
@@ -21,11 +21,26 @@ const stateClasses: Record<WordTileData["state"], string> = {
 };
 
 export function WordTile({ tile, onDragEnd }: WordTileProps) {
+  const shouldReduce = useReducedMotion();
   const isDraggable = tile.state !== "revealed";
 
   function handleDragEnd(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
     onDragEnd?.(tile.id, info.point.x, info.point.y);
   }
+
+  const animateState: TargetAndTransition = shouldReduce
+    ? { x: 0, scale: 1 }
+    : tile.state === "incorrect"
+    ? {
+        x: [0, -9, 9, -7, 7, -4, 4, 0],
+        transition: { duration: 0.45, ease: "easeInOut" as const },
+      }
+    : tile.state === "correct"
+    ? {
+        scale: [1, 1.2, 0.93, 1.07, 1],
+        transition: { duration: 0.45, times: [0, 0.25, 0.55, 0.78, 1] },
+      }
+    : { x: 0, scale: 1 };
 
   return (
     <motion.div
@@ -33,19 +48,17 @@ export function WordTile({ tile, onDragEnd }: WordTileProps) {
       drag={isDraggable}
       dragMomentum={false}
       dragElastic={0.12}
-      whileDrag={{
-        scale: 1.1,
-        zIndex: 50,
-        boxShadow: "0 14px 28px rgba(0,0,0,0.22)",
-        cursor: "grabbing",
-      }}
-      animate={
-        tile.state === "incorrect"
-          ? { x: [0, -7, 7, -7, 7, 0], transition: { duration: 0.4 } }
-          : tile.state === "correct"
-          ? { scale: [1, 1.12, 1], transition: { duration: 0.28 } }
-          : { x: 0, scale: 1 }
+      whileDrag={
+        shouldReduce
+          ? {}
+          : {
+              scale: 1.12,
+              zIndex: 50,
+              boxShadow: "0 18px 36px rgba(0,0,0,0.25)",
+              cursor: "grabbing",
+            }
       }
+      animate={animateState}
       onDragEnd={handleDragEnd}
       className={[
         "flex items-center justify-center rounded-xl font-semibold text-sm",
