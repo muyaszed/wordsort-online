@@ -63,7 +63,7 @@ export function ConfettiBurst() {
           }}
           initial={{ y: -20, opacity: 1, rotate: 0, scaleX: 1 }}
           animate={{
-            y: ["0%", "40%", "90%"],
+            y: [0, 200, 500],
             opacity: [1, 1, 0],
             rotate: [0, p.rotateEnd / 2, p.rotateEnd],
             scaleX: [1, 0.6, 1],

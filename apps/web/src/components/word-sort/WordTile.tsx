@@ -37,6 +37,7 @@ export function WordTile({ tile, onDragEnd }: WordTileProps) {
       }
     : tile.state === "correct"
     ? {
+        x: 0,
         scale: [1, 1.2, 0.93, 1.07, 1],
         transition: { duration: 0.45, times: [0, 0.25, 0.55, 0.78, 1] },
       }

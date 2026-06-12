@@ -63,7 +63,7 @@ export function CategoryZone({
 
   const solvedAnimate = shouldReduce
     ? { scale: 1, y: 0 }
-    : { scale: [1, 1.06, 0.97, 1.02, 1], y: [0, -6, 0] };
+    : { scale: [1, 1.06, 0.97, 1.02, 1], y: [0, -6, -3, -1.5, 0] };
 
   return (
     <motion.div
