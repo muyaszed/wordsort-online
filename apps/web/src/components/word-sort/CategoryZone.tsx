@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { CategoryDef, WordTileData, ZoneColor } from "@/lib/word-sort-types";
 import { WordTile } from "./WordTile";
 
@@ -52,6 +52,7 @@ export function CategoryZone({
   onTileDragEnd,
 }: CategoryZoneProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const shouldReduce = useReducedMotion();
   const colors = colorMap[category.color];
   const emptySlots = Math.max(0, 4 - tiles.length);
 
@@ -60,12 +61,16 @@ export function CategoryZone({
     return () => onRegister(category.id, null);
   }, [category.id, onRegister]);
 
+  const solvedAnimate = shouldReduce
+    ? { scale: 1, y: 0 }
+    : { scale: [1, 1.06, 0.97, 1.02, 1], y: [0, -6, -3, -1.5, 0] };
+
   return (
     <motion.div
       ref={ref}
       layout
-      animate={isSolved ? { scale: [1, 1.03, 1] } : { scale: 1 }}
-      transition={{ duration: 0.35 }}
+      animate={isSolved ? solvedAnimate : { scale: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
       className={[
         "rounded-2xl border-2 p-4 min-h-[130px] flex flex-col gap-3",
         "transition-colors duration-300",
@@ -84,8 +89,9 @@ export function CategoryZone({
         </span>
         {isSolved && (
           <motion.span
-            initial={{ scale: 0, opacity: 0 }}
+            initial={shouldReduce ? false : { scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.15 }}
             className="ml-auto text-emerald-600 font-bold"
           >
             ✓
@@ -96,13 +102,13 @@ export function CategoryZone({
       {/* Tiles + empty slots */}
       <div className="flex flex-wrap gap-2">
         <AnimatePresence>
-          {tiles.map((tile) => (
+          {tiles.map((tile, i) => (
             <motion.div
               key={tile.id}
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={shouldReduce ? false : { opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2 }}
+              exit={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.2, delay: isSolved ? i * 0.05 : 0 }}
             >
               <WordTile tile={tile} onDragEnd={onTileDragEnd} />
             </motion.div>

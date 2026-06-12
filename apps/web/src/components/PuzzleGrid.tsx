@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { canSlide, findEmpty, getSolvedCells, getSolvedWordSet, type PuzzleGrid, type PuzzleState } from "@/lib/puzzle-engine";
 
 interface PuzzleGridProps {
@@ -20,8 +20,8 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
   const emptyRow = Math.floor(emptyIndex / 5);
   const emptyCol = emptyIndex % 5;
 
-  const solvedCells = getSolvedCells(state);
-  const solvedWords = getSolvedWordSet(state);
+  const solvedCells = useMemo(() => getSolvedCells(state), [state.grid]);
+  const solvedWords = useMemo(() => getSolvedWordSet(state), [state.grid]);
 
   const handleClick = useCallback(
     (index: number) => {

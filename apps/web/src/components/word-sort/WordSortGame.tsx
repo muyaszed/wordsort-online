@@ -10,6 +10,7 @@ import { buildShareSquares, buildShareText } from "@/lib/daily-puzzle";
 import { BoardGrid } from "./BoardGrid";
 import { ScoreSummary } from "./ScoreSummary";
 import { AlreadyPlayedView } from "./AlreadyPlayedView";
+import { ConfettiBurst } from "./ConfettiBurst";
 
 interface WordSortGameProps {
   categories: CategoryDef[];
@@ -87,7 +88,12 @@ export function WordSortGame({ categories, puzzleId, title }: WordSortGameProps)
       : undefined;
 
   return (
-    <div className="flex flex-col items-center gap-5 w-full">
+    <div className="relative flex flex-col items-center gap-5 w-full">
+      {/* Confetti burst on win */}
+      <AnimatePresence>
+        {state.solved && <ConfettiBurst key="confetti" />}
+      </AnimatePresence>
+
       {/* Header stats */}
       <div className="flex items-center gap-6 text-sm text-slate-500">
         <span>
