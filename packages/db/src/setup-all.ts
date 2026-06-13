@@ -1,5 +1,9 @@
 import 'dotenv/config';
 import { execSync } from 'child_process';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import postgres from 'postgres';
+import path from 'path';
 
 const prod = process.env.DATABASE_URL;
 const dev = process.env.DATABASE_URL_DEV;
@@ -14,13 +18,30 @@ if (!prod || !dev) {
   process.exit(1);
 }
 
-function run(label: string, url: string) {
+const migrationsFolder = path.join(__dirname, '..', 'drizzle');
+
+async function setup(label: string, url: string) {
   console.log(`\n=== ${label} ===`);
-  const env = { ...process.env, DATABASE_URL: url };
-  execSync('drizzle-kit migrate', { env, stdio: 'inherit' });
-  execSync('tsx src/seed.ts', { env, stdio: 'inherit' });
+
+  // Run migrations programmatically — avoids drizzle-kit CLI reloading .env
+  const client = postgres(url, { max: 1 });
+  const db = drizzle(client);
+  await migrate(db, { migrationsFolder });
+  await client.end();
+  console.log('  ✓ migrations applied');
+
+  // Seed against the same URL
+  execSync('tsx src/seed.ts', {
+    env: { ...process.env, DATABASE_URL: url },
+    stdio: 'inherit',
+  });
 }
 
-run('Production database', prod);
-run('Dev database', dev);
-console.log('\nBoth databases are set up.');
+(async () => {
+  await setup('Production database', prod);
+  await setup('Dev database', dev);
+  console.log('\nBoth databases are set up.');
+})().catch((err) => {
+  console.error('setup-all failed:', err);
+  process.exit(1);
+});
