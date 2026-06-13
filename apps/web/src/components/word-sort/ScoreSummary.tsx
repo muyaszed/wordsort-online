@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { formatTime } from "@/lib/daily-puzzle";
 import { copyToClipboard } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth-store";
 
 interface ScoreSummaryProps {
   title?: string;
@@ -23,6 +24,8 @@ export function ScoreSummary({
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const shouldReduce = useReducedMotion();
+  const user = useAuthStore((s) => s.user);
+  const openLogin = useAuthStore((s) => s.openLogin);
 
   async function handleShare() {
     if (!shareText) return;
@@ -99,12 +102,15 @@ export function ScoreSummary({
             {copied ? "Copied!" : copyFailed ? "Copy failed — try again" : "Share score"}
           </button>
         )}
-        <a
-          href="/sign-in"
-          className="block w-full py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm hover:bg-slate-700 transition-colors"
-        >
-          Save your score
-        </a>
+        {!user && (
+          <button
+            type="button"
+            onClick={openLogin}
+            className="w-full py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm hover:bg-slate-700 transition-colors"
+          >
+            Save your score
+          </button>
+        )}
         <button
           onClick={onPlayAgain}
           className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 transition-colors"

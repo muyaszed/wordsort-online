@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { QueryProvider } from "@/providers/query-provider";
+import { AuthProvider } from "@/providers/auth-provider";
+import { AuthModal } from "@/components/auth/AuthModal";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
@@ -25,9 +27,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="flex min-h-dvh flex-col bg-slate-50 text-slate-900">
         <QueryProvider>
-          <Header />
-          <main className="flex flex-1 flex-col">{children}</main>
-          <Footer />
+          <AuthProvider>
+            <Header />
+            <main className="flex flex-1 flex-col">{children}</main>
+            <Footer />
+            <AuthModal />
+          </AuthProvider>
         </QueryProvider>
         <Analytics />
       </body>
