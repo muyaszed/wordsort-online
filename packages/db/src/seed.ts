@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { puzzles, categories, word_sets } from './schema';
 
 if (!process.env.DATABASE_URL) {
@@ -174,6 +174,11 @@ const SEED_PUZZLES = [
 }>;
 
 async function seed() {
+  // Ensure migration 0005 has been applied; safe to run even if column already exists.
+  await db.execute(
+    sql`ALTER TABLE categories ADD COLUMN IF NOT EXISTS sort_order integer NOT NULL DEFAULT 0`,
+  );
+
   console.log(`Seeding ${SEED_PUZZLES.length} puzzles…`);
 
   for (const p of SEED_PUZZLES) {
