@@ -16,6 +16,8 @@ const SEED_PUZZLES = [
     date: '2026-06-09',
     title: 'In the Kitchen',
     difficulty: 'easy' as const,
+    // 5×5 tile-slider words: 4×5-letter + 1×4-letter = 24 letters total (one empty cell)
+    words: ['STEAM', 'BROIL', 'SAUCE', 'SPICE', 'HERB'],
     categories: [
       { name: 'Cooking methods', words: ['BAKE', 'BOIL', 'FRY', 'ROAST'] },
       { name: 'Baked goods', words: ['BREAD', 'CAKE', 'ROLL', 'TART'] },
@@ -27,6 +29,7 @@ const SEED_PUZZLES = [
     date: '2026-06-10',
     title: 'World Cities',
     difficulty: 'easy' as const,
+    words: ['PARIS', 'TOKYO', 'CAIRO', 'DELHI', 'ROME'],
     categories: [
       { name: 'European capitals', words: ['BERN', 'OSLO', 'PARIS', 'ROME'] },
       { name: 'Asian cities', words: ['DELHI', 'HANOI', 'SEOUL', 'TOKYO'] },
@@ -38,6 +41,7 @@ const SEED_PUZZLES = [
     date: '2026-06-11',
     title: 'Wild Kingdom',
     difficulty: 'medium' as const,
+    words: ['TIGER', 'EAGLE', 'SHARK', 'COBRA', 'LION'],
     categories: [
       { name: 'Big cats', words: ['LION', 'LYNX', 'PUMA', 'TIGER'] },
       { name: 'Birds of prey', words: ['EAGLE', 'HAWK', 'KITE', 'OWL'] },
@@ -49,6 +53,7 @@ const SEED_PUZZLES = [
     date: '2026-06-12',
     title: 'Sports Day',
     difficulty: 'medium' as const,
+    words: ['RUGBY', 'SKATE', 'RELAY', 'SPORT', 'GOLF'],
     categories: [
       { name: 'Ball sports', words: ['GOLF', 'POLO', 'RUGBY', 'TENNIS'] },
       { name: 'Water sports', words: ['DIVE', 'ROW', 'SURF', 'SWIM'] },
@@ -60,6 +65,7 @@ const SEED_PUZZLES = [
     date: '2026-06-13',
     title: 'Concert Hall',
     difficulty: 'medium' as const,
+    words: ['PIANO', 'FLUTE', 'CELLO', 'VIOLA', 'DRUM'],
     categories: [
       { name: 'String instruments', words: ['BANJO', 'CELLO', 'HARP', 'VIOLA'] },
       { name: 'Woodwinds', words: ['FIFE', 'FLUTE', 'OBOE', 'PIPE'] },
@@ -71,6 +77,7 @@ const SEED_PUZZLES = [
     date: '2026-06-14',
     title: 'Weather Watch',
     difficulty: 'easy' as const,
+    words: ['STORM', 'CLOUD', 'FROST', 'SLEET', 'HAIL'],
     categories: [
       { name: 'Precipitation', words: ['HAIL', 'RAIN', 'SLEET', 'SNOW'] },
       { name: 'Storm types', words: ['GALE', 'GUST', 'SQUALL', 'STORM'] },
@@ -82,6 +89,7 @@ const SEED_PUZZLES = [
     date: '2026-06-15',
     title: 'Space Lab',
     difficulty: 'hard' as const,
+    words: ['ORBIT', 'COMET', 'LUNAR', 'SOLAR', 'STAR'],
     categories: [
       { name: 'Planets', words: ['EARTH', 'MARS', 'PLUTO', 'VENUS'] },
       { name: 'Space phenomena', words: ['COMET', 'MOON', 'NOVA', 'ORBIT'] },
@@ -93,6 +101,7 @@ const SEED_PUZZLES = [
     date: '2026-06-16',
     title: 'European Tour',
     difficulty: 'medium' as const,
+    words: ['SPAIN', 'ITALY', 'WALES', 'SWISS', 'OSLO'],
     categories: [
       { name: 'Countries', words: ['FRANCE', 'ITALY', 'SPAIN', 'WALES'] },
       { name: 'Languages', words: ['CZECH', 'GREEK', 'LATIN', 'WELSH'] },
@@ -104,6 +113,7 @@ const SEED_PUZZLES = [
     date: '2026-06-17',
     title: 'Street Food',
     difficulty: 'medium' as const,
+    words: ['KEBAB', 'PIZZA', 'SUSHI', 'CREPE', 'WRAP'],
     categories: [
       { name: 'Asian', words: ['BAO', 'RAMEN', 'SATAY', 'SUSHI'] },
       { name: 'Latin American', words: ['AREPA', 'ELOTE', 'NACHO', 'TACOS'] },
@@ -115,6 +125,7 @@ const SEED_PUZZLES = [
     date: '2026-06-18',
     title: 'Safari Animals',
     difficulty: 'medium' as const,
+    words: ['ZEBRA', 'HIPPO', 'RHINO', 'HYENA', 'LION'],
     categories: [
       { name: 'Large mammals', words: ['BISON', 'HIPPO', 'RHINO', 'ZEBRA'] },
       { name: 'Primates', words: ['BABOON', 'CHIMP', 'GIBBON', 'LEMUR'] },
@@ -126,6 +137,7 @@ const SEED_PUZZLES = [
     date: '2026-06-19',
     title: 'Biology Lab',
     difficulty: 'hard' as const,
+    words: ['HEART', 'BRAIN', 'LIVER', 'VIRUS', 'CELL'],
     categories: [
       { name: 'Body organs', words: ['BRAIN', 'HEART', 'LIVER', 'LUNGS'] },
       { name: 'Genetics', words: ['DNA', 'GENE', 'HELIX', 'RNA'] },
@@ -137,6 +149,7 @@ const SEED_PUZZLES = [
     date: '2026-06-20',
     title: 'Digital World',
     difficulty: 'hard' as const,
+    words: ['PIXEL', 'CLICK', 'BYTES', 'DRIVE', 'CODE'],
     categories: [
       { name: 'Hardware', words: ['CPU', 'GPU', 'RAM', 'ROM'] },
       { name: 'Storage', words: ['DISK', 'DRIVE', 'FLASH', 'TAPE'] },
@@ -148,6 +161,7 @@ const SEED_PUZZLES = [
     date: '2026-06-21',
     title: 'Great Outdoors',
     difficulty: 'easy' as const,
+    words: ['TRAIL', 'RIVER', 'CLIFF', 'GROVE', 'CAMP'],
     categories: [
       { name: 'Water bodies', words: ['LAKE', 'OCEAN', 'POND', 'RIVER'] },
       { name: 'Landforms', words: ['CLIFF', 'HILL', 'MESA', 'RIDGE'] },
@@ -159,6 +173,7 @@ const SEED_PUZZLES = [
     date: '2026-06-22',
     title: 'Art Studio',
     difficulty: 'medium' as const,
+    words: ['BRUSH', 'EASEL', 'PAINT', 'MURAL', 'CLAY'],
     categories: [
       { name: 'Warm colors', words: ['CORAL', 'CREAM', 'OCHRE', 'PEACH'] },
       { name: 'Cool colors', words: ['AZURE', 'CYAN', 'JADE', 'TEAL'] },
@@ -170,6 +185,7 @@ const SEED_PUZZLES = [
   date: string;
   title: string;
   difficulty: 'easy' | 'medium' | 'hard';
+  words: string[];
   categories: Array<{ name: string; words: string[] }>;
 }>;
 
@@ -224,12 +240,14 @@ async function seed() {
       );
     }
 
-    // Keep word_sets in sync for backward compat (flat list of all words)
-    const allWords = p.categories.flatMap((c) => c.words);
+    // Upsert word_sets with the tile-slider words for this date
     await db
       .insert(word_sets)
-      .values({ puzzle_date: p.date, words: allWords })
-      .onConflictDoNothing();
+      .values({ puzzle_date: p.date, words: p.words })
+      .onConflictDoUpdate({
+        target: word_sets.puzzle_date,
+        set: { words: p.words },
+      });
 
     console.log(`  ✓ ${p.date} — ${p.title} (${p.difficulty})`);
   }

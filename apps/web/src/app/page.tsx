@@ -1,53 +1,42 @@
-import { WordSortGame } from "@/components/word-sort/WordSortGame";
-import { DailyPuzzleHeader } from "@/components/word-sort/DailyPuzzleHeader";
-import { SAMPLE_SORT_CATEGORIES } from "@/lib/word-sort-sample";
-import type { CategoryDef, ZoneColor } from "@/lib/word-sort-types";
+import { PuzzleGame } from "@/components/PuzzleGame";
+import { DAILY_PUZZLE } from "@/lib/sample-data";
+import type { PuzzleDefinition } from "@/lib/sample-data";
 
 export const dynamic = "force-dynamic";
 
-const ZONE_COLORS: ZoneColor[] = ["yellow", "green", "blue", "purple"];
-
-interface DailyPuzzleResponse {
+interface WordSetResponse {
   id: string;
   date: string;
   title: string;
-  difficulty: string;
-  categories: Array<{ id: string; name: string; words: string[] }>;
+  words: string[];
 }
 
-async function getDailyPuzzle(): Promise<DailyPuzzleResponse | null> {
+async function getDailyWordSet(): Promise<WordSetResponse | null> {
   const apiUrl = process.env.API_URL ?? "http://localhost:3001";
   try {
-    const res = await fetch(`${apiUrl}/api/puzzles/daily`, { cache: "no-store" });
+    const res = await fetch(`${apiUrl}/api/words`, { cache: "no-store" });
     if (!res.ok) return null;
-    return res.json() as Promise<DailyPuzzleResponse>;
+    return res.json() as Promise<WordSetResponse>;
   } catch {
     return null;
   }
 }
 
 export default async function Home() {
-  const puzzle = await getDailyPuzzle();
+  const wordSet = await getDailyWordSet();
 
-  const puzzleId = puzzle?.date ?? new Date().toISOString().slice(0, 10);
-
-  const categories: CategoryDef[] = puzzle
-    ? puzzle.categories.map((cat, i) => ({
-        id: cat.id,
-        name: cat.name,
-        color: ZONE_COLORS[i % 4]!,
-        words: cat.words,
-      }))
-    : SAMPLE_SORT_CATEGORIES;
+  const puzzle: PuzzleDefinition = wordSet
+    ? {
+        id: wordSet.date,
+        date: wordSet.date,
+        title: wordSet.title,
+        words: wordSet.words,
+      }
+    : DAILY_PUZZLE;
 
   return (
-    <main className="flex flex-col items-center justify-start min-h-dvh px-4 py-6 gap-6">
-      <DailyPuzzleHeader puzzleId={puzzleId} title={puzzle?.title} />
-      <WordSortGame
-        categories={categories}
-        puzzleId={puzzleId}
-        title={puzzle?.title}
-      />
-    </main>
+    <div className="flex flex-col items-center justify-start px-4 py-6 gap-6">
+      <PuzzleGame puzzle={puzzle} />
+    </div>
   );
 }

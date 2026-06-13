@@ -12,7 +12,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { z } from 'zod';
-import { createDb, word_sets, leaderboard, asc, eq, sql, cacheGet, cacheSet, cacheInvalidateLeaderboard } from '@wordsort/db';
+import { createDb, word_sets, puzzles, leaderboard, asc, eq, sql, cacheGet, cacheSet, cacheInvalidateLeaderboard } from '@wordsort/db';
 import { attachSocketIO } from './ws';
 import { authRouter } from './auth/routes';
 import { usersRouter, recalculateStreak } from './users/routes';
@@ -102,22 +102,29 @@ const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
 
-// GET /api/words — return the current active word set
+// GET /api/words — return the current active word set with puzzle title
 app.get('/words', async (c) => {
-  const [wordSet] = await db
-    .select()
+  const [row] = await db
+    .select({
+      id: word_sets.id,
+      puzzle_date: word_sets.puzzle_date,
+      words: word_sets.words,
+      title: puzzles.title,
+    })
     .from(word_sets)
+    .leftJoin(puzzles, eq(puzzles.date, word_sets.puzzle_date))
     .where(eq(word_sets.is_active, true))
     .limit(1);
 
-  if (!wordSet) {
+  if (!row) {
     throw new HTTPException(404, { message: 'No active word set found' });
   }
 
   return c.json({
-    id: wordSet.id,
-    date: wordSet.puzzle_date,
-    words: wordSet.words,
+    id: row.id,
+    date: row.puzzle_date,
+    title: row.title ?? row.puzzle_date,
+    words: row.words,
   });
 });
 
