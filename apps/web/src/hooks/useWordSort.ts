@@ -15,13 +15,15 @@ export interface UseWordSortReturn {
   reset: () => void;
 }
 
-export function useWordSort(categories: CategoryDef[]): UseWordSortReturn {
+export function useWordSort(categories: CategoryDef[], puzzleId?: string): UseWordSortReturn {
   const [state, setState] = useState<WordSortState>(() =>
-    createWordSortGame(categories)
+    createWordSortGame(categories, puzzleId)
   );
   const zoneRefs = useRef<Map<string, HTMLElement>>(new Map());
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
+  const puzzleIdRef = useRef(puzzleId);
+  puzzleIdRef.current = puzzleId;
 
   const registerZone = useCallback(
     (categoryId: string, el: HTMLElement | null) => {
@@ -61,7 +63,7 @@ export function useWordSort(categories: CategoryDef[]): UseWordSortReturn {
   }, []);
 
   const reset = useCallback(() => {
-    setState(createWordSortGame(categoriesRef.current));
+    setState(createWordSortGame(categoriesRef.current, puzzleIdRef.current));
   }, []);
 
   return { state, registerZone, onTileDragEnd, reset };

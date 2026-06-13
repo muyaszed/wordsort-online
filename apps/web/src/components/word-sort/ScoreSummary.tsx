@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { formatTime } from "@/lib/daily-puzzle";
 import { copyToClipboard } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth-store";
 
 interface ScoreSummaryProps {
   title?: string;
@@ -23,6 +24,8 @@ export function ScoreSummary({
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const shouldReduce = useReducedMotion();
+  const user = useAuthStore((s) => s.user);
+  const openLogin = useAuthStore((s) => s.openLogin);
 
   async function handleShare() {
     if (!shareText) return;
@@ -88,23 +91,33 @@ export function ScoreSummary({
 
       <div className="mt-5 flex flex-col gap-2">
         {shareText && (
+          <>
+            <pre className="w-full rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-left text-sm text-slate-700 whitespace-pre-wrap font-mono leading-relaxed select-all">
+              {shareText}
+            </pre>
+            <button
+              onClick={handleShare}
+              className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors text-white ${
+                copyFailed
+                  ? "bg-red-500 hover:bg-red-600"
+                  : copied
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+              }`}
+            >
+              {copied ? "✓ Copied!" : copyFailed ? "Copy failed — try again" : "Copy & Share"}
+            </button>
+          </>
+        )}
+        {!user && (
           <button
-            onClick={handleShare}
-            className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors text-white ${
-              copyFailed
-                ? "bg-red-500 hover:bg-red-600"
-                : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
+            type="button"
+            onClick={openLogin}
+            className="w-full py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm hover:bg-slate-700 transition-colors"
           >
-            {copied ? "Copied!" : copyFailed ? "Copy failed — try again" : "Share score"}
+            Save your score
           </button>
         )}
-        <a
-          href="/sign-in"
-          className="block w-full py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm hover:bg-slate-700 transition-colors"
-        >
-          Save your score
-        </a>
         <button
           onClick={onPlayAgain}
           className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 transition-colors"

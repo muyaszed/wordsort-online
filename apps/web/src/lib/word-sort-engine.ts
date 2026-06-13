@@ -1,16 +1,34 @@
 import type { CategoryDef, TileState, WordSortState, WordTileData } from "./word-sort-types";
 
-function shuffle<T>(arr: T[]): T[] {
+// Mulberry32 — fast, seedable PRNG. Seeding by date ensures all players see the same tile order.
+function mulberry32(seed: number) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let z = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    z = (z + Math.imul(z ^ (z >>> 7), 61 | z)) ^ z;
+    return ((z ^ (z >>> 14)) >>> 0) / 0x100000000;
+  };
+}
+
+function dateToSeed(dateStr: string): number {
+  // 'YYYY-MM-DD' → stable integer, e.g. '2026-06-13' → 20260613
+  return dateStr.split('-').reduce((acc, part) => acc * 100 + parseInt(part, 10), 0);
+}
+
+function shuffle<T>(arr: T[], rand: () => number): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rand() * (i + 1));
     [a[i], a[j]] = [a[j]!, a[i]!];
   }
   return a;
 }
 
-export function createWordSortGame(categories: CategoryDef[]): WordSortState {
-  const allWords = shuffle(categories.flatMap((c) => c.words));
+// puzzleId is 'YYYY-MM-DD'; when provided the shuffle is deterministic so all players see the same board.
+export function createWordSortGame(categories: CategoryDef[], puzzleId?: string): WordSortState {
+  const rand = puzzleId ? mulberry32(dateToSeed(puzzleId)) : Math.random.bind(Math);
+  const allWords = shuffle(categories.flatMap((c) => c.words), rand);
   const tiles: WordTileData[] = allWords.map((word, i) => ({
     id: `tile-${i}`,
     word,
