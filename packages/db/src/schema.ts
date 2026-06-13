@@ -52,6 +52,7 @@ export const categories = pgTable('categories', {
     .references(() => puzzles.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   words: text('words').array().notNull(),
+  sort_order: integer('sort_order').notNull().default(0),
 });
 
 export const scores = pgTable('scores', {

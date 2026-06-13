@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { createDb, word_sets, eq, cacheGet, cacheSetWithTTL } from '@wordsort/db';
+import { createDb, puzzles, categories, eq, asc, cacheGet, cacheSetWithTTL } from '@wordsort/db';
 
 function secondsUntilMidnightUTC(): number {
   const now = new Date();
@@ -13,7 +13,7 @@ export const puzzlesRouter = new Hono();
 
 const db = createDb(process.env.DATABASE_URL!);
 
-// GET /api/puzzles/daily — returns today's puzzle; Redis-cached until midnight UTC
+// GET /api/puzzles/daily — returns today's puzzle with categories; Redis-cached until midnight UTC
 puzzlesRouter.get('/daily', async (c) => {
   const today = new Date().toISOString().slice(0, 10);
   const cacheKey = `puzzle:daily:${today}`;
@@ -21,20 +21,36 @@ puzzlesRouter.get('/daily', async (c) => {
   const cached = await cacheGet(cacheKey);
   if (cached) return c.json(cached);
 
-  const [wordSet] = await db
+  const [puzzle] = await db
     .select()
-    .from(word_sets)
-    .where(eq(word_sets.puzzle_date, today))
+    .from(puzzles)
+    .where(eq(puzzles.date, today))
     .limit(1);
 
-  if (!wordSet) {
+  if (!puzzle) {
     throw new HTTPException(404, { message: 'No puzzle scheduled for today' });
   }
 
+  const puzzleCategories = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.puzzle_id, puzzle.id))
+    .orderBy(asc(categories.sort_order));
+
+  if (puzzleCategories.length === 0) {
+    throw new HTTPException(404, { message: 'Puzzle has no categories' });
+  }
+
   const result = {
-    id: wordSet.id,
-    date: wordSet.puzzle_date,
-    words: wordSet.words,
+    id: puzzle.id,
+    date: puzzle.date,
+    title: puzzle.title,
+    difficulty: puzzle.difficulty,
+    categories: puzzleCategories.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      words: cat.words,
+    })),
   };
 
   await cacheSetWithTTL(cacheKey, result, secondsUntilMidnightUTC());
