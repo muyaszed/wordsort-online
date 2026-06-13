@@ -11,6 +11,7 @@ async function reset() {
   const url = new URL(process.env.DATABASE_URL!);
   console.log(`Resetting database at ${url.hostname}${url.pathname}…`);
   await client`DROP SCHEMA public CASCADE`;
+  await client`DROP SCHEMA IF EXISTS drizzle CASCADE`;
   await client`CREATE SCHEMA public`;
   await client`GRANT ALL ON SCHEMA public TO neondb_owner`;
   await client`GRANT ALL ON SCHEMA public TO public`;
