@@ -10,7 +10,9 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
   ALTER TABLE "users" ADD CONSTRAINT "users_google_id_unique" UNIQUE("google_id");
-EXCEPTION WHEN duplicate_object THEN null;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+  WHEN duplicate_table THEN null;
 END $$;
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "refresh_tokens" (
