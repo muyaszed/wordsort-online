@@ -10,7 +10,7 @@
     "db:reset": "tsx src/reset.ts",
     "db:seed": "tsx src/seed.ts",
     "db:setup": "drizzle-kit migrate && tsx src/seed.ts",
-    "db:setup:all": "bash scripts/setup-all.sh"
+    "db:setup:all": "tsx src/setup-all.ts"
   },
   "exports": {
     ".": {
