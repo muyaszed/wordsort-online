@@ -1,5 +1,13 @@
-CREATE TYPE "public"."difficulty" AS ENUM('easy', 'medium', 'hard');--> statement-breakpoint
-CREATE TYPE "public"."puzzle_status" AS ENUM('draft', 'reviewed', 'published');--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."difficulty" AS ENUM('easy', 'medium', 'hard');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+  CREATE TYPE "public"."puzzle_status" AS ENUM('draft', 'reviewed', 'published');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"puzzle_id" uuid NOT NULL,
