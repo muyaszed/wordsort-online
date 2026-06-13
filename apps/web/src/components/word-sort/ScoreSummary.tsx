@@ -91,16 +91,23 @@ export function ScoreSummary({
 
       <div className="mt-5 flex flex-col gap-2">
         {shareText && (
-          <button
-            onClick={handleShare}
-            className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors text-white ${
-              copyFailed
-                ? "bg-red-500 hover:bg-red-600"
-                : "bg-indigo-600 hover:bg-indigo-700"
-            }`}
-          >
-            {copied ? "Copied!" : copyFailed ? "Copy failed — try again" : "Share score"}
-          </button>
+          <>
+            <pre className="w-full rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-left text-sm text-slate-700 whitespace-pre-wrap font-mono leading-relaxed select-all">
+              {shareText}
+            </pre>
+            <button
+              onClick={handleShare}
+              className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors text-white ${
+                copyFailed
+                  ? "bg-red-500 hover:bg-red-600"
+                  : copied
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+              }`}
+            >
+              {copied ? "✓ Copied!" : copyFailed ? "Copy failed — try again" : "Copy & Share"}
+            </button>
+          </>
         )}
         {!user && (
           <button

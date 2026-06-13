@@ -69,5 +69,5 @@ export function buildShareText(opts: {
       ? "No mistakes! 🎉"
       : `${mistakes} mistake${mistakes !== 1 ? "s" : ""}`;
 
-  return `${titleLine}\n${dateLabel}\n\n${shareSquares}\n⏱ ${formatTime(elapsedMs)} · ${mistakeLine}\n\nwordsort.app`;
+  return `${titleLine}\n${dateLabel}\n\n${shareSquares}\n⏱ ${formatTime(elapsedMs)} · ${mistakeLine}\n\nPlay at: wordsort.app/sort`;
 }

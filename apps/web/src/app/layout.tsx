@@ -7,9 +7,25 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wordsort.app";
+
 export const metadata: Metadata = {
-  title: "Wordsort",
-  description: "Slide the tiles to sort every row into a word",
+  title: "WordSort",
+  description: "A daily word-sorting puzzle. Group tiles into the right categories — play once a day.",
+  metadataBase: new URL(SITE_URL),
+  openGraph: {
+    title: "WordSort",
+    description: "A daily word-sorting puzzle. Group tiles into the right categories — play once a day.",
+    url: SITE_URL,
+    siteName: "WordSort",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WordSort",
+    description: "A daily word-sorting puzzle. Group tiles into the right categories — play once a day.",
+  },
 };
 
 export const viewport: Viewport = {
