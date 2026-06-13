@@ -23,8 +23,12 @@ const migrationsFolder = path.join(__dirname, '..', 'drizzle');
 async function setup(label: string, url: string) {
   console.log(`\n=== ${label} ===`);
 
-  // Run migrations programmatically — avoids drizzle-kit CLI reloading .env
   const client = postgres(url, { max: 1 });
+
+  // Drop drizzle's migration tracker so migrate() always runs all migrations
+  // from scratch. Without this, stale records cause it to skip table creation.
+  await client`DROP SCHEMA IF EXISTS drizzle CASCADE`;
+
   const db = drizzle(client);
   await migrate(db, { migrationsFolder });
   await client.end();
