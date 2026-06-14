@@ -124,6 +124,7 @@ export function WordSortGame({ categories, puzzleId, title }: WordSortGameProps)
             title={title}
             elapsedMs={elapsedMs}
             mistakes={state.mistakes}
+            steps={state.categories.length + state.mistakes}
             shareText={shareText}
             onPlayAgain={reset}
           />

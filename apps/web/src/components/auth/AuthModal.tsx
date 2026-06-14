@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
+import { scoresApi } from "@/lib/api-client";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import { GoogleOAuthButton } from "./GoogleOAuthButton";
@@ -13,8 +14,24 @@ export function AuthModal() {
   const openLogin = useAuthStore((s) => s.openLogin);
   const openRegister = useAuthStore((s) => s.openRegister);
   const closeAuthModal = useAuthStore((s) => s.closeAuthModal);
+  const pendingScore = useAuthStore((s) => s.pendingScore);
+  const clearPendingScore = useAuthStore((s) => s.clearPendingScore);
 
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  const hasPendingScore = pendingScore !== null;
+
+  const handleAuthSuccess = useCallback(async () => {
+    const { accessToken, user, pendingScore: score } = useAuthStore.getState();
+    if (!score || !accessToken || !user) return;
+    try {
+      await scoresApi.submit(user.username, score.steps, score.timeSeconds, accessToken);
+    } catch {
+      // Score submission failure is non-fatal; user is still authed
+    } finally {
+      clearPendingScore();
+    }
+  }, [clearPendingScore]);
 
   // Close on Escape
   useEffect(() => {
@@ -37,6 +54,20 @@ export function AuthModal() {
       document.body.style.overflow = "";
     };
   }, [authModal]);
+
+  const title = hasPendingScore
+    ? authModal === "login"
+      ? "Sign in to save your score"
+      : "Create account to save your score"
+    : authModal === "login"
+      ? "Sign in"
+      : "Create account";
+
+  const subtitle = hasPendingScore
+    ? "Your score will be saved to the leaderboard automatically."
+    : authModal === "login"
+      ? "Sign in to save your scores and streaks."
+      : "Join to track your scores and compete.";
 
   return (
     <AnimatePresence>
@@ -70,21 +101,11 @@ export function AuthModal() {
               <X size={18} />
             </button>
 
-            <h2 className="mb-1 text-lg font-semibold text-slate-900">
-              {authModal === "login" ? "Sign in" : "Create account"}
-            </h2>
-            <p className="mb-5 text-sm text-slate-500">
-              {authModal === "login"
-                ? "Sign in to save your scores and streaks."
-                : "Join to track your scores and compete."}
-            </p>
+            <h2 className="mb-1 text-lg font-semibold text-slate-900">{title}</h2>
+            <p className="mb-5 text-sm text-slate-500">{subtitle}</p>
 
             <GoogleOAuthButton
-              label={
-                authModal === "login"
-                  ? "Sign in with Google"
-                  : "Sign up with Google"
-              }
+              label={authModal === "login" ? "Sign in with Google" : "Sign up with Google"}
             />
 
             <div className="my-4 flex items-center gap-3">
@@ -94,9 +115,15 @@ export function AuthModal() {
             </div>
 
             {authModal === "login" ? (
-              <LoginForm onSwitchToRegister={openRegister} />
+              <LoginForm
+                onSuccess={hasPendingScore ? handleAuthSuccess : undefined}
+                onSwitchToRegister={openRegister}
+              />
             ) : (
-              <RegisterForm onSwitchToLogin={openLogin} />
+              <RegisterForm
+                onSuccess={hasPendingScore ? handleAuthSuccess : undefined}
+                onSwitchToLogin={openLogin}
+              />
             )}
           </motion.div>
         </motion.div>

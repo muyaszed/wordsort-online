@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { formatTime } from "@/lib/daily-puzzle";
 import { copyToClipboard } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import { scoresApi, type ScoreSubmitResponse } from "@/lib/api-client";
 
 interface ScoreSummaryProps {
   title?: string;
   elapsedMs: number;
   mistakes: number;
+  steps: number;
   shareText?: string;
   onPlayAgain: () => void;
 }
@@ -18,14 +20,41 @@ export function ScoreSummary({
   title,
   elapsedMs,
   mistakes,
+  steps,
   shareText,
   onPlayAgain,
 }: ScoreSummaryProps) {
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<ScoreSubmitResponse | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const shouldReduce = useReducedMotion();
   const user = useAuthStore((s) => s.user);
-  const openLogin = useAuthStore((s) => s.openLogin);
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const setPendingScore = useAuthStore((s) => s.setPendingScore);
+  const openRegister = useAuthStore((s) => s.openRegister);
+  const submittedRef = useRef(false);
+
+  const timeSeconds = Math.max(1, Math.round(elapsedMs / 1000));
+
+  // Auto-submit for logged-in users on first render
+  useEffect(() => {
+    if (!user || !accessToken || submittedRef.current) return;
+    submittedRef.current = true;
+
+    setSubmitting(true);
+    scoresApi
+      .submit(user.username, steps, timeSeconds, accessToken)
+      .then((res) => setSubmitResult(res))
+      .catch(() => setSubmitError("Score not saved — try again later."))
+      .finally(() => setSubmitting(false));
+  }, [user, accessToken, steps, timeSeconds]);
+
+  function handleSaveScore() {
+    setPendingScore({ steps, timeSeconds });
+    openRegister();
+  }
 
   async function handleShare() {
     if (!shareText) return;
@@ -89,6 +118,30 @@ export function ScoreSummary({
         </motion.p>
       )}
 
+      {/* Score save status for logged-in users */}
+      {user && (
+        <motion.p
+          initial={shouldReduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className={`mt-3 text-sm font-medium ${
+            submitting
+              ? "text-slate-400"
+              : submitError
+                ? "text-red-500"
+                : "text-emerald-600"
+          }`}
+        >
+          {submitting
+            ? "Saving score…"
+            : submitError
+              ? submitError
+              : submitResult
+                ? "Score saved!"
+                : null}
+        </motion.p>
+      )}
+
       <div className="mt-5 flex flex-col gap-2">
         {shareText && (
           <>
@@ -112,7 +165,7 @@ export function ScoreSummary({
         {!user && (
           <button
             type="button"
-            onClick={openLogin}
+            onClick={handleSaveScore}
             className="w-full py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm hover:bg-slate-700 transition-colors"
           >
             Save your score
