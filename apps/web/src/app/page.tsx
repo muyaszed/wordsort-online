@@ -35,7 +35,7 @@ export default async function Home() {
     : DAILY_PUZZLE;
 
   return (
-    <div className="flex flex-col items-center justify-start px-4 py-6 gap-6">
+    <div className="flex flex-col items-center justify-start px-3 sm:px-4 py-4 sm:py-6 gap-4 sm:gap-6">
       <PuzzleGame puzzle={puzzle} />
     </div>
   );

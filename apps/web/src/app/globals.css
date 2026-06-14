@@ -7,6 +7,19 @@
   touch-action: manipulation;
 }
 
+html,
 body {
   overscroll-behavior: none;
+}
+
+/* Draggable tiles require free-form pointer gestures; override the manipulation default */
+[data-draggable] {
+  touch-action: none;
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  /* Compact vertical spacing on landscape phones so content stays on screen */
+  .game-portrait-stack {
+    gap: 0.5rem;
+  }
 }

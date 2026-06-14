@@ -72,7 +72,7 @@ export function CategoryZone({
       animate={isSolved ? solvedAnimate : { scale: 1, y: 0 }}
       transition={{ duration: 0.45, ease: "easeOut" }}
       className={[
-        "rounded-2xl border-2 p-4 min-h-[130px] flex flex-col gap-3",
+        "rounded-2xl border-2 p-3 sm:p-4 min-h-[110px] sm:min-h-[130px] flex flex-col gap-2 sm:gap-3",
         "transition-colors duration-300",
         isSolved
           ? colors.solvedBg
@@ -118,7 +118,7 @@ export function CategoryZone({
         {Array.from({ length: emptySlots }).map((_, i) => (
           <div
             key={`slot-${i}`}
-            className="h-11 min-w-[4.5rem] rounded-xl border-2 border-dashed border-slate-200"
+            className="h-12 min-w-[4rem] sm:min-w-[4.5rem] rounded-xl border-2 border-dashed border-slate-200"
           />
         ))}
       </div>

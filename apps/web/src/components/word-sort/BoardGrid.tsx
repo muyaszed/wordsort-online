@@ -19,9 +19,9 @@ export function BoardGrid({
   const poolTiles = state.tiles.filter((t) => t.categoryId === null);
 
   return (
-    <div className="flex flex-col gap-5 w-full max-w-xl mx-auto">
+    <div className="flex flex-col gap-3 sm:gap-5 w-full max-w-xl mx-auto overflow-x-hidden">
       {/* 2×2 grid of category zones */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
         {state.categories.map((category) => {
           const categoryTiles = state.tiles.filter(
             (t) => t.categoryId === category.id
@@ -42,7 +42,7 @@ export function BoardGrid({
       {/* Word pool */}
       <motion.div
         layout
-        className="rounded-2xl bg-slate-50 border-2 border-slate-200 p-4"
+        className="rounded-2xl bg-slate-50 border-2 border-slate-200 p-3 sm:p-4"
       >
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
           Words to sort

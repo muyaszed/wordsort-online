@@ -61,10 +61,11 @@ export function WordTile({ tile, onDragEnd }: WordTileProps) {
       }
       animate={animateState}
       onDragEnd={handleDragEnd}
+      data-draggable={isDraggable || undefined}
       className={[
         "flex items-center justify-center rounded-xl font-semibold text-sm",
         "border-2 shadow-sm select-none",
-        "h-11 px-4 min-w-[4.5rem]",
+        "h-12 px-3 sm:px-4 min-w-[4rem] sm:min-w-[4.5rem]",
         "transition-colors duration-200",
         stateClasses[tile.state],
       ].join(" ")}
