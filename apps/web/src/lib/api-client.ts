@@ -56,6 +56,27 @@ export interface RefreshResponse {
   expires_in: number;
 }
 
+export interface LeaderboardEntry {
+  id: string;
+  name: string;
+  steps: number;
+  timeSeconds: number;
+  submittedAt: string;
+}
+
+export interface LeaderboardResponse {
+  data: LeaderboardEntry[];
+  pagination: { page: number; limit: number; total: number };
+}
+
+export const leaderboardApi = {
+  daily: (page = 1, limit = 50) =>
+    request<LeaderboardResponse>(`/leaderboard/daily?page=${page}&limit=${limit}`),
+
+  alltime: (page = 1, limit = 50) =>
+    request<LeaderboardResponse>(`/leaderboard/alltime?page=${page}&limit=${limit}`),
+};
+
 export const authApi = {
   register: (email: string, username: string, password: string) =>
     request<TokenResponse>("/auth/register", {

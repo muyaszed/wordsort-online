@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,7 @@ export function Header({ className }: HeaderProps) {
   const user = useAuthStore((s) => s.user);
   const openLogin = useAuthStore((s) => s.openLogin);
   const logout = useAuthStore((s) => s.logout);
+  const pathname = usePathname();
 
   return (
     <header
@@ -22,9 +25,27 @@ export function Header({ className }: HeaderProps) {
       )}
     >
       <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
-        <span className="text-lg font-bold tracking-tight text-slate-900">
-          Wordsort
-        </span>
+        <div className="flex items-center gap-5">
+          <Link
+            href="/"
+            className="text-lg font-bold tracking-tight text-slate-900 hover:text-indigo-600 transition-colors"
+          >
+            Wordsort
+          </Link>
+          <nav className="flex items-center gap-1">
+            <Link
+              href="/leaderboard"
+              className={cn(
+                "rounded-md px-2.5 py-1 text-sm font-medium transition-colors",
+                pathname === "/leaderboard"
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              )}
+            >
+              Leaderboard
+            </Link>
+          </nav>
+        </div>
 
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-400 tabular-nums">
