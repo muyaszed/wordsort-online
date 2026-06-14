@@ -69,6 +69,29 @@ export interface LeaderboardResponse {
   pagination: { page: number; limit: number; total: number };
 }
 
+export interface ScoreSubmitResponse {
+  id: string;
+  name: string;
+  steps: number;
+  timeSeconds: number;
+  submittedAt: string;
+  rank: number;
+}
+
+export const scoresApi = {
+  submit: (
+    name: string,
+    steps: number,
+    timeSeconds: number,
+    accessToken: string
+  ) =>
+    request<ScoreSubmitResponse>(
+      "/scores",
+      { method: "POST", body: JSON.stringify({ name, steps, timeSeconds }) },
+      accessToken
+    ),
+};
+
 export const leaderboardApi = {
   daily: (page = 1, limit = 50) =>
     request<LeaderboardResponse>(`/leaderboard/daily?page=${page}&limit=${limit}`),
