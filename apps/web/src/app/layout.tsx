@@ -11,11 +11,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wordsort.app";
 
 export const metadata: Metadata = {
   title: "WordSort",
-  description: "A daily word-sorting puzzle. Group tiles into the right categories — play once a day.",
+  description: "A daily sliding-tile puzzle. Slide letters to spell target words — play once a day.",
   metadataBase: new URL(SITE_URL),
   openGraph: {
     title: "WordSort",
-    description: "A daily word-sorting puzzle. Group tiles into the right categories — play once a day.",
+    description: "A daily sliding-tile puzzle. Slide letters to spell target words — play once a day.",
     url: SITE_URL,
     siteName: "WordSort",
     locale: "en_US",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "WordSort",
-    description: "A daily word-sorting puzzle. Group tiles into the right categories — play once a day.",
+    description: "A daily sliding-tile puzzle. Slide letters to spell target words — play once a day.",
   },
 };
 
