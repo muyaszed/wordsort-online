@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
-import { scoresApi } from "@/lib/api-client";
 import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import { GoogleOAuthButton } from "./GoogleOAuthButton";
@@ -21,16 +20,12 @@ export function AuthModal() {
 
   const hasPendingScore = pendingScore !== null;
 
-  const handleAuthSuccess = useCallback(async () => {
-    const { accessToken, user, pendingScore: score } = useAuthStore.getState();
-    if (!score || !accessToken || !user) return;
-    try {
-      await scoresApi.submit(user.username, score.steps, score.timeSeconds, accessToken);
-    } catch {
-      // Score submission failure is non-fatal; user is still authed
-    } finally {
-      clearPendingScore();
-    }
+  // After email/password auth, just clear the pending score context.
+  // ScoreSummary's auto-submit effect handles the actual POST /scores call
+  // and will display the rank once it resolves. Google OAuth handles its own
+  // submission in the callback page before redirecting back.
+  const handleAuthSuccess = useCallback(() => {
+    clearPendingScore();
   }, [clearPendingScore]);
 
   // Close on Escape

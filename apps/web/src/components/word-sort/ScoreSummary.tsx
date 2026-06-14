@@ -99,6 +99,9 @@ export function ScoreSummary({
         {[
           { value: formatTime(elapsedMs), label: "Time" },
           { value: String(mistakes), label: "Mistakes" },
+          ...(submitResult?.rank != null
+            ? [{ value: `#${submitResult.rank}`, label: "Rank" }]
+            : []),
         ].map(({ value, label }, i) => (
           <motion.div key={label} custom={i} variants={statVariants} initial="hidden" animate="visible">
             <p className="text-3xl font-bold text-slate-800">{value}</p>

@@ -75,6 +75,7 @@ export interface ScoreSubmitResponse {
   steps: number;
   timeSeconds: number;
   submittedAt: string;
+  rank: number;
 }
 
 export const scoresApi = {
