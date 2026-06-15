@@ -2,6 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authApi, type AuthUser } from "@/lib/api-client";
 
+export interface PendingScore {
+  steps: number;
+  timeSeconds: number;
+}
+
 interface AuthStore {
   user: AuthUser | null;
   accessToken: string | null;
@@ -13,6 +18,11 @@ interface AuthStore {
   openLogin: () => void;
   openRegister: () => void;
   closeAuthModal: () => void;
+
+  // Pending score (not persisted — cleared on page unload)
+  pendingScore: PendingScore | null;
+  setPendingScore: (score: PendingScore) => void;
+  clearPendingScore: () => void;
 
   // Auth actions
   setTokens: (
@@ -36,6 +46,10 @@ export const useAuthStore = create<AuthStore>()(
       openLogin: () => set({ authModal: "login" }),
       openRegister: () => set({ authModal: "register" }),
       closeAuthModal: () => set({ authModal: "closed" }),
+
+      pendingScore: null,
+      setPendingScore: (score) => set({ pendingScore: score }),
+      clearPendingScore: () => set({ pendingScore: null }),
 
       setTokens: (accessToken, refreshToken, user) =>
         set({ accessToken, refreshToken, user }),

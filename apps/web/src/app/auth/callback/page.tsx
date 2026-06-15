@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { authApi } from "@/lib/api-client";
+import { authApi, scoresApi } from "@/lib/api-client";
 import { useAuthStore } from "@/store/auth-store";
 
 export default function AuthCallbackPage() {
@@ -28,10 +28,21 @@ export default function AuthCallbackPage() {
       return;
     }
 
+    const pendingScoreRaw = sessionStorage.getItem("oauth_pending_score");
+    sessionStorage.removeItem("oauth_pending_score");
+
     authApi
       .googleCallback(code, codeVerifier)
-      .then((data) => {
+      .then(async (data) => {
         setTokens(data.access_token, data.refresh_token, data.user);
+        if (pendingScoreRaw) {
+          try {
+            const score = JSON.parse(pendingScoreRaw) as { steps: number; timeSeconds: number };
+            await scoresApi.submit(data.user.username, score.steps, score.timeSeconds, data.access_token);
+          } catch {
+            // Score submission failure is non-fatal
+          }
+        }
         router.replace("/");
       })
       .catch(() => {

@@ -168,6 +168,13 @@ app.post('/scores', requireAuth, async (c) => {
     await recalculateStreak(user.sub);
   }
 
+  const [{ rank }] = await db
+    .select({ rank: sql<number>`COUNT(*)::int + 1` })
+    .from(leaderboard)
+    .where(
+      sql`${leaderboard.puzzle_date} = ${wordSet.puzzle_date} AND (${leaderboard.steps} < ${steps} OR (${leaderboard.steps} = ${steps} AND ${leaderboard.time_seconds} < ${timeSeconds}))`
+    );
+
   return c.json(
     {
       id: entry.id,
@@ -175,6 +182,7 @@ app.post('/scores', requireAuth, async (c) => {
       steps: entry.steps,
       timeSeconds: entry.time_seconds,
       submittedAt: entry.submitted_at,
+      rank,
     },
     201,
   );

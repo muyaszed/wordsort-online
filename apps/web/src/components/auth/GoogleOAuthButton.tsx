@@ -21,6 +21,13 @@ export function GoogleOAuthButton({
       const { url, state, code_verifier } = await authApi.getGoogleAuthUrl();
       sessionStorage.setItem("oauth_state", state);
       sessionStorage.setItem("oauth_code_verifier", code_verifier);
+
+      // Persist pending score across the OAuth redirect
+      const { pendingScore } = (await import("@/store/auth-store")).useAuthStore.getState();
+      if (pendingScore) {
+        sessionStorage.setItem("oauth_pending_score", JSON.stringify(pendingScore));
+      }
+
       window.location.href = url;
     } catch {
       setError("Failed to start Google sign-in. Please try again.");
