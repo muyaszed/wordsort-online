@@ -7,6 +7,10 @@ import type { WordTileData } from "@/lib/word-sort-types";
 interface WordTileProps {
   tile: WordTileData;
   onDragEnd?: (tileId: string, x: number, y: number) => void;
+  onPickUp?: (tileId: string) => void;
+  isHeld?: boolean;
+  inKeyboardMode?: boolean;
+  tileRef?: React.RefCallback<HTMLDivElement>;
 }
 
 const stateClasses: Record<WordTileData["state"], string> = {
@@ -20,12 +24,31 @@ const stateClasses: Record<WordTileData["state"], string> = {
     "bg-emerald-100 border-emerald-500 text-emerald-900 cursor-default",
 };
 
-export function WordTile({ tile, onDragEnd }: WordTileProps) {
+export function WordTile({
+  tile,
+  onDragEnd,
+  onPickUp,
+  isHeld,
+  inKeyboardMode,
+  tileRef,
+}: WordTileProps) {
   const shouldReduce = useReducedMotion();
   const isDraggable = tile.state !== "revealed";
+  const isKeyboardInteractive = !!onPickUp && isDraggable;
 
-  function handleDragEnd(_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
+  function handleDragEnd(
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) {
     onDragEnd?.(tile.id, info.point.x, info.point.y);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!isKeyboardInteractive) return;
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      onPickUp!(tile.id);
+    }
   }
 
   const animateState: TargetAndTransition = shouldReduce
@@ -45,6 +68,7 @@ export function WordTile({ tile, onDragEnd }: WordTileProps) {
 
   return (
     <motion.div
+      ref={tileRef}
       layout
       drag={isDraggable}
       dragMomentum={false}
@@ -62,12 +86,18 @@ export function WordTile({ tile, onDragEnd }: WordTileProps) {
       animate={animateState}
       onDragEnd={handleDragEnd}
       data-draggable={isDraggable || undefined}
+      onKeyDown={handleKeyDown}
+      role={isKeyboardInteractive ? "button" : undefined}
+      tabIndex={isKeyboardInteractive && !inKeyboardMode ? 0 : -1}
+      aria-label={isHeld ? `${tile.word}, selected` : tile.word}
+      aria-pressed={isKeyboardInteractive ? isHeld ?? false : undefined}
       className={[
         "flex items-center justify-center rounded-xl font-semibold text-sm",
         "border-2 shadow-sm select-none",
         "h-12 px-3 sm:px-4 min-w-[4rem] sm:min-w-[4.5rem]",
         "transition-colors duration-200",
         stateClasses[tile.state],
+        isHeld ? "ring-2 ring-indigo-500 ring-offset-2" : "",
       ].join(" ")}
     >
       {tile.word}

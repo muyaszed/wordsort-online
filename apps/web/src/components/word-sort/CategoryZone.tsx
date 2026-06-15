@@ -71,6 +71,7 @@ export function CategoryZone({
       layout
       animate={isSolved ? solvedAnimate : { scale: 1, y: 0 }}
       transition={{ duration: 0.45, ease: "easeOut" }}
+      aria-label={`${category.name}${isSolved ? ", solved" : ""}`}
       className={[
         "rounded-2xl border-2 p-3 sm:p-4 min-h-[110px] sm:min-h-[130px] flex flex-col gap-2 sm:gap-3",
         "transition-colors duration-300",
