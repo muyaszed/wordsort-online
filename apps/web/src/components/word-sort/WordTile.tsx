@@ -10,7 +10,7 @@ interface WordTileProps {
   onPickUp?: (tileId: string) => void;
   isHeld?: boolean;
   inKeyboardMode?: boolean;
-  tileRef?: React.RefCallback<HTMLDivElement>;
+  tileRef?: React.RefCallback<HTMLElement>;
 }
 
 const stateClasses: Record<WordTileData["state"], string> = {
@@ -66,41 +66,53 @@ export function WordTile({
       }
     : { x: 0, scale: 1 };
 
+  const sharedClassName = [
+    "flex items-center justify-center rounded-xl font-semibold text-sm",
+    "border-2 shadow-sm select-none",
+    "h-11 px-4 min-w-[4.5rem]",
+    "transition-colors duration-200",
+    stateClasses[tile.state],
+    isHeld ? "ring-2 ring-indigo-500 ring-offset-2" : "",
+  ].join(" ");
+
+  const sharedMotionProps = {
+    layout: true as const,
+    drag: isDraggable as boolean,
+    dragMomentum: false,
+    dragElastic: 0.12,
+    whileDrag: shouldReduce
+      ? {}
+      : {
+          scale: 1.12,
+          zIndex: 50,
+          boxShadow: "0 18px 36px rgba(0,0,0,0.25)",
+          cursor: "grabbing",
+        },
+    animate: animateState,
+    onDragEnd: handleDragEnd,
+    onKeyDown: handleKeyDown,
+    "aria-label": isHeld ? `${tile.word}, selected` : tile.word,
+    className: sharedClassName,
+  };
+
+  // Pool tiles: use a native <button> so Tab navigation works on all
+  // platforms including macOS (where div[tabIndex] is skipped by default).
+  if (isKeyboardInteractive) {
+    return (
+      <motion.button
+        ref={tileRef as React.RefCallback<HTMLButtonElement>}
+        {...sharedMotionProps}
+        type="button"
+        tabIndex={inKeyboardMode ? -1 : 0}
+        aria-pressed={isHeld ?? false}
+      >
+        {tile.word}
+      </motion.button>
+    );
+  }
+
   return (
-    <motion.div
-      ref={tileRef}
-      layout
-      drag={isDraggable}
-      dragMomentum={false}
-      dragElastic={0.12}
-      whileDrag={
-        shouldReduce
-          ? {}
-          : {
-              scale: 1.12,
-              zIndex: 50,
-              boxShadow: "0 18px 36px rgba(0,0,0,0.25)",
-              cursor: "grabbing",
-            }
-      }
-      animate={animateState}
-      onDragEnd={handleDragEnd}
-      data-draggable={isDraggable || undefined}
-      onKeyDown={handleKeyDown}
-      role={isKeyboardInteractive ? "button" : undefined}
-      tabIndex={isKeyboardInteractive && !inKeyboardMode ? 0 : -1}
-      aria-label={isHeld ? `${tile.word}, selected` : tile.word}
-      aria-pressed={isKeyboardInteractive ? isHeld ?? false : undefined}
-      className={[
-        "flex items-center justify-center rounded-xl font-semibold text-sm",
-        "border-2 shadow-sm select-none",
-        "h-12 px-3 sm:px-4 min-w-[4rem] sm:min-w-[4.5rem]",
-        "transition-colors duration-200",
-        "outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
-        stateClasses[tile.state],
-        isHeld ? "ring-2 ring-indigo-500 ring-offset-2" : "",
-      ].join(" ")}
-    >
+    <motion.div ref={tileRef as React.RefCallback<HTMLDivElement>} {...sharedMotionProps} tabIndex={-1}>
       {tile.word}
     </motion.div>
   );
