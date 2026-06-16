@@ -27,6 +27,27 @@ export function BoardGrid({
   const prevSolvedIdsRef = useRef<string[]>([]);
   const prevSolvedRef = useRef(false);
 
+  // These refs record what to focus AFTER the next state-commit (useEffect).
+  // Using rAF here races with React 18 concurrent commits; useEffect is safe.
+  const pendingCellFocusRef = useRef<number | null>(null);
+  const pendingTileFocusRef = useRef<string | null>(null);
+
+  // Move focus to a category cell after heldTileId is committed to state.
+  useEffect(() => {
+    if (heldTileId !== null && pendingCellFocusRef.current !== null) {
+      cellRefs.current[pendingCellFocusRef.current]?.focus();
+      pendingCellFocusRef.current = null;
+    }
+  }, [heldTileId]);
+
+  // Return focus to a pool tile after heldTileId is cleared.
+  useEffect(() => {
+    if (heldTileId === null && pendingTileFocusRef.current !== null) {
+      tileRefs.current.get(pendingTileFocusRef.current)?.focus();
+      pendingTileFocusRef.current = null;
+    }
+  }, [heldTileId]);
+
   // Clear announcement after a beat so the same text can re-trigger
   useEffect(() => {
     if (!announcement) return;
@@ -53,26 +74,19 @@ export function BoardGrid({
 
   const pickUpTile = useCallback(
     (tileId: string) => {
-      setHeldTileId(tileId);
       const firstUnsolvedIndex = state.categories.findIndex(
         (c) => !state.solvedIds.includes(c.id)
       );
-      const targetIndex = firstUnsolvedIndex >= 0 ? firstUnsolvedIndex : 0;
-      requestAnimationFrame(() => {
-        cellRefs.current[targetIndex]?.focus();
-      });
+      pendingCellFocusRef.current = firstUnsolvedIndex >= 0 ? firstUnsolvedIndex : 0;
+      setHeldTileId(tileId);
     },
     [state.categories, state.solvedIds]
   );
 
   const cancelHold = useCallback(() => {
     const id = heldTileId;
+    if (id) pendingTileFocusRef.current = id;
     setHeldTileId(null);
-    if (id) {
-      requestAnimationFrame(() => {
-        tileRefs.current.get(id)?.focus();
-      });
-    }
   }, [heldTileId]);
 
   const dropIntoZone = useCallback(
@@ -91,15 +105,12 @@ export function BoardGrid({
       );
 
       const placedTileId = heldTileId;
+      if (!isCorrect) {
+        // Focus returns to the tile (it stays in the pool)
+        pendingTileFocusRef.current = placedTileId;
+      }
       onKeyboardPlace(placedTileId, category.id);
       setHeldTileId(null);
-
-      if (!isCorrect) {
-        // Tile stays in pool (incorrect state); return focus to it
-        requestAnimationFrame(() => {
-          tileRefs.current.get(placedTileId)?.focus();
-        });
-      }
     },
     [heldTileId, state, onKeyboardPlace]
   );
