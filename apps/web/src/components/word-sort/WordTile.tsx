@@ -96,6 +96,7 @@ export function WordTile({
         "border-2 shadow-sm select-none",
         "h-12 px-3 sm:px-4 min-w-[4rem] sm:min-w-[4.5rem]",
         "transition-colors duration-200",
+        "outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
         stateClasses[tile.state],
         isHeld ? "ring-2 ring-indigo-500 ring-offset-2" : "",
       ].join(" ")}
