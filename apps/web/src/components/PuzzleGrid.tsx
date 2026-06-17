@@ -16,6 +16,7 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
   const [animating, setAnimating] = useState<{ index: number; dx: number; dy: number } | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const lockRef = useRef(false);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!announcement) return;
@@ -46,6 +47,9 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
         onSlideTile(index);
         setAnimating(null);
         lockRef.current = false;
+        // Return focus to the grid container so arrow-key nav keeps working
+        // after a tile button slides away and unmounts (losing focus to body).
+        gridRef.current?.focus();
       }, 180);
     },
     [grid, emptyRow, emptyCol, onSlideTile]
@@ -67,6 +71,13 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
   const handleGridKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (state.solved) return;
+      // Prevent page scroll when Space/Enter is pressed on the grid container itself.
+      // Don't preventDefault when the event originated from a child button (that would
+      // suppress the button's native Space→click synthesis).
+      if ((e.key === " " || e.key === "Enter") && e.target === e.currentTarget) {
+        e.preventDefault();
+        return;
+      }
       const dirMap: Record<string, { dr: number; dc: number; label: string }> = {
         ArrowUp:    { dr: 1,  dc: 0,  label: "up" },
         ArrowDown:  { dr: -1, dc: 0,  label: "down" },
@@ -130,6 +141,7 @@ export function PuzzleGrid({ state, onSlideTile }: PuzzleGridProps) {
 
       {/* 5×5 grid — focusable container for arrow-key navigation */}
       <div
+        ref={gridRef}
         role="application"
         aria-label="Sliding letter puzzle. Tab to a slideable tile and press Space or Enter to slide it, or focus here and use arrow keys."
         tabIndex={state.solved ? -1 : 0}
