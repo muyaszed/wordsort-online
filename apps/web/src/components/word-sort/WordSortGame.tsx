@@ -19,7 +19,7 @@ interface WordSortGameProps {
 }
 
 export function WordSortGame({ categories, puzzleId, title }: WordSortGameProps) {
-  const { state, registerZone, onTileDragEnd, reset } = useWordSort(categories, puzzleId);
+  const { state, registerZone, onTileDragEnd, placeTile, reset } = useWordSort(categories, puzzleId);
   const { markPuzzleCompleted, isPuzzleCompleted, completedPuzzles } = useGameStore();
   const markedRef = useRef(false);
 
@@ -116,6 +116,7 @@ export function WordSortGame({ categories, puzzleId, title }: WordSortGameProps)
         state={state}
         onRegisterZone={registerZone}
         onTileDragEnd={onTileDragEnd}
+        onKeyboardPlace={placeTile}
       />
 
       <AnimatePresence>

@@ -12,6 +12,7 @@ export interface UseWordSortReturn {
   state: WordSortState;
   registerZone: (categoryId: string, el: HTMLElement | null) => void;
   onTileDragEnd: (tileId: string, x: number, y: number) => void;
+  placeTile: (tileId: string, categoryId: string) => void;
   reset: () => void;
 }
 
@@ -62,9 +63,21 @@ export function useWordSort(categories: CategoryDef[], puzzleId?: string): UseWo
     });
   }, []);
 
+  const placeTile = useCallback((tileId: string, categoryId: string) => {
+    setState((s) => {
+      const { nextState, accepted } = tryPlaceTile(s, tileId, categoryId);
+      if (!accepted) {
+        setTimeout(() => {
+          setState((ss) => resetTileToPool(ss, tileId));
+        }, 650);
+      }
+      return nextState;
+    });
+  }, []);
+
   const reset = useCallback(() => {
     setState(createWordSortGame(categoriesRef.current, puzzleIdRef.current));
   }, []);
 
-  return { state, registerZone, onTileDragEnd, reset };
+  return { state, registerZone, onTileDragEnd, placeTile, reset };
 }
